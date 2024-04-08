@@ -1,4 +1,4 @@
-use relm4::{adw, gtk};
+use relm4::{adw, gtk, prelude::ComponentSender};
 use gtk::prelude::{
     ButtonExt, ToggleButtonExt,
     WidgetExt, OrientableExt,
@@ -23,10 +23,17 @@ pub struct FormState {
 }
 
 #[derive(Default, Debug)]
-pub struct FormCommand;
+pub enum FormCommand {
+    #[default]
+    NoCommand,
+    ChangeBrand(String),
+}
 
 #[derive(Default, Debug)]
-pub struct FormMessage;
+pub enum FormMessage {
+    #[default]
+    NoMessage,
+}
 
 #[relm4::component(pub)]
 impl SimpleComponent for FormModel {
@@ -46,6 +53,12 @@ impl SimpleComponent for FormModel {
                 #[watch]
                 set_text: model.state.brand.as_ref(),
                 set_title: "Marca",
+                connect_changed => move |entry| {
+                    sender.input(
+                        FormCommand::ChangeBrand(entry.text().to_string())
+                    );
+                }
+                
             },
             adw::SpinRow {
                 set_title: "Custo",
@@ -79,11 +92,20 @@ impl SimpleComponent for FormModel {
     fn init(
             init: Self::Init,
             root: Self::Root,
-            sender: relm4::prelude::ComponentSender<Self>,
+            sender: ComponentSender<Self>,
     ) -> ComponentParts<Self> {
         let state = FormState::default();
         let model = FormModel { state };
         let widgets = view_output!();
         ComponentParts { model, widgets }
+    }
+
+    fn update(&mut self, message: Self::Input, sender: ComponentSender<Self>) {
+        match message {
+            FormCommand::NoCommand => {}
+            FormCommand::ChangeBrand(text) => {
+                self.state.brand = text;
+            }
+        }
     }
 }

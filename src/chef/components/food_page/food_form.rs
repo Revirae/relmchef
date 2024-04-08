@@ -26,7 +26,11 @@ pub struct FormState {
 pub enum FormCommand {
     #[default]
     NoCommand,
+    ChangeName(String),
     ChangeBrand(String),
+    ChangeCost(f64),
+    ChangeWeight(f64),
+    ChangeVolume(f64)
 }
 
 #[derive(Default, Debug)]
@@ -103,8 +107,20 @@ impl SimpleComponent for FormModel {
     fn update(&mut self, message: Self::Input, sender: ComponentSender<Self>) {
         match message {
             FormCommand::NoCommand => {}
+            FormCommand::ChangeName(text) => {
+                self.state.name = text;
+            }
             FormCommand::ChangeBrand(text) => {
                 self.state.brand = text;
+            }
+            FormCommand::ChangeCost(value) => {
+                self.state.cost= value;
+            }
+            FormCommand::ChangeWeight(value) => {
+                self.state.weight = value;
+            }
+            FormCommand::ChangeVolume(value) => {
+                self.state.volume = value;
             }
         }
     }

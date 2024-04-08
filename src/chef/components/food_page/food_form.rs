@@ -10,15 +10,17 @@ use relm4::{ComponentParts, SimpleComponent};
 
 #[derive(Debug)]
 pub struct FormModel {
-    name: String
+    state: FormState,
+}
+
+#[derive(Default, Debug)]
+pub struct FormState {
+    name: String,
     brand: String,
     cost: f64,
     weight: f64,
     volume: f64
 }
-
-#[derive(Default, Debug)]
-pub struct FormState;
 
 #[derive(Default, Debug)]
 pub struct FormCommand;
@@ -37,29 +39,34 @@ impl SimpleComponent for FormModel {
             set_orientation: gtk::Orientation::Horizontal,
             adw::EntryRow {
                 #[watch]
-                set_text: model.name.as_ref(),
+                set_text: model.state.name.as_ref(),
                 set_title: "Nome",
             },
             adw::EntryRow {
                 #[watch]
-                set_text: model.brand.as_ref(),
+                set_text: model.state.brand.as_ref(),
                 set_title: "Marca",
             },
             adw::SpinRow {
                 set_title: "Custo",
-                set_value: model.cost,
+                #[watch]
+                set_value: model.state.cost,
                 set_adjustment: Some(&gtk::Adjustment::new(
                     0., 0., 9999., 0.05, 0.5, 10.
                 )),
             },
             adw::SpinRow {
                 set_title: "Peso",
+                #[watch]
+                set_value: model.state.weight,
                 set_adjustment: Some(&gtk::Adjustment::new(
                     0., 0., 9999., 0.05, 0.5, 10.
                 )),
             },
             adw::SpinRow {
                 set_title: "Volume",
+                #[watch]
+                set_value: model.state.volume,
                 set_adjustment: Some(&gtk::Adjustment::new(
                     0., 0., 9999., 0.05, 0.5, 10.
                 )),
@@ -71,8 +78,8 @@ impl SimpleComponent for FormModel {
             root: Self::Root,
             sender: relm4::prelude::ComponentSender<Self>,
     ) -> ComponentParts<Self> {
-        
-        let model = FormModel;
+        let state = FormState::default();
+        let model = FormModel { state };
         let widgets = view_output!();
         ComponentParts { model, widgets }
     }

@@ -51,6 +51,7 @@ impl SimpleComponent for FormModel {
                 set_title: "Custo",
                 #[watch]
                 set_value: model.state.cost,
+                set_digits: 2,
                 set_adjustment: Some(&gtk::Adjustment::new(
                     0., 0., 9999., 0.05, 0.5, 10.
                 )),
@@ -59,6 +60,7 @@ impl SimpleComponent for FormModel {
                 set_title: "Peso",
                 #[watch]
                 set_value: model.state.weight,
+                set_digits: 2,
                 set_adjustment: Some(&gtk::Adjustment::new(
                     0., 0., 9999., 0.05, 0.5, 10.
                 )),
@@ -67,6 +69,7 @@ impl SimpleComponent for FormModel {
                 set_title: "Volume",
                 #[watch]
                 set_value: model.state.volume,
+                set_digits: 2,
                 set_adjustment: Some(&gtk::Adjustment::new(
                     0., 0., 9999., 0.05, 0.5, 10.
                 )),

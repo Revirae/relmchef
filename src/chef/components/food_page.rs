@@ -15,10 +15,12 @@ use relm4::{
     Component
 };
 
+use self::{food_form::{FormMessage, FormModel, FormState}, food_list::{FoodListMessage, FoodListModel, FoodListState}};
+
 #[derive(Debug)]
 pub struct PageModel{
-    food_form: Controller<food_form::FormModel>,
-    food_list: Controller<food_list::FoodListModel>,
+    food_form: Controller<FormModel>,
+    food_list: Controller<FoodListModel>,
 }
 
 #[derive(Default, Debug)]
@@ -56,15 +58,22 @@ impl SimpleComponent for PageModel {
             root: Self::Root,
             sender: relm4::prelude::ComponentSender<Self>,
     ) -> ComponentParts<Self> {
-        let food_form = food_form::FormModel::builder()
-            .launch(food_form::FormState::default())
+        let food_form = FormModel::builder()
+            .launch(FormState::default())
             .forward(sender.input_sender(), |msg| match msg {
-                _ => { PageCommand::NoCommand }
+                FormMessage::NoMessage => {
+                    PageCommand::NoCommand
+                }
+                FormMessage::Changed => {
+                    PageCommand::NoCommand
+                }
             });
-        let food_list = food_list::FoodListModel::builder()
-            .launch(food_list::FoodListState::default())
+        let food_list = FoodListModel::builder()
+            .launch(FoodListState::default())
             .forward(sender.input_sender(), |msg| match msg {
-                _ => { PageCommand::NoCommand }
+                FoodListMessage::NoMessage => {
+                    PageCommand::NoCommand
+                }
             });
         let model = PageModel { food_form, food_list };
         let widgets = view_output!();

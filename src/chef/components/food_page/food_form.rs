@@ -37,6 +37,7 @@ pub enum FormCommand {
 pub enum FormMessage {
     #[default]
     NoMessage,
+    Changed,
 }
 
 #[relm4::component(pub)]
@@ -109,18 +110,23 @@ impl SimpleComponent for FormModel {
             FormCommand::NoCommand => {}
             FormCommand::ChangeName(text) => {
                 self.state.name = text;
+                sender.output(FormMessage::Changed);
             }
             FormCommand::ChangeBrand(text) => {
                 self.state.brand = text;
+                sender.output(FormMessage::Changed);
             }
             FormCommand::ChangeCost(value) => {
                 self.state.cost= value;
+                sender.output(FormMessage::Changed);
             }
             FormCommand::ChangeWeight(value) => {
                 self.state.weight = value;
+                sender.output(FormMessage::Changed);
             }
             FormCommand::ChangeVolume(value) => {
                 self.state.volume = value;
+                sender.output(FormMessage::Changed);
             }
         }
     }

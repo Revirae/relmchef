@@ -38,7 +38,10 @@ impl SimpleComponent for FoodListModel {
     view! {
         #[root]
         gtk::Box {
-            set_orientation: gtk::Orientation::Horizontal,
+            set_orientation: gtk::Orientation::Vertical,
+            adw::ComboRow {
+                set_title: "Nome",
+            }
         }
     }
     fn init(

@@ -18,6 +18,7 @@ use relm4::{
 #[derive(Debug)]
 pub struct PageModel{
     food_form: Controller<food_form::FormModel>,
+    food_list: Controller<food_list::FoodListModel>,
 }
 
 #[derive(Default, Debug)]
@@ -60,7 +61,12 @@ impl SimpleComponent for PageModel {
             .forward(sender.input_sender(), |msg| match msg {
                 _ => { PageCommand::NoCommand }
             });
-        let model = PageModel { food_form };
+        let food_list = food_list::FoodListModel::builder()
+            .launch(food_list::FoodListState::default())
+            .forward(sender.input_sender(), |msg| match msg {
+                _ => { PageCommand::NoCommand }
+            });
+        let model = PageModel { food_form, food_list };
         let widgets = view_output!();
         ComponentParts { model, widgets }
     }

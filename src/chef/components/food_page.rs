@@ -1,5 +1,6 @@
 #![allow(unused)]
 mod food_form;
+mod food_list;
 
 use relm4::gtk;
 use gtk::prelude::{

@@ -6,7 +6,10 @@ use gtk::prelude::{
     WidgetExt, OrientableExt,
     EditableExt,
 };
-use adw::prelude::PreferencesRowExt;
+use adw::prelude::{
+    PreferencesRowExt,
+    ActionRowExt,
+};
 
 use crate::chef::models;
 
@@ -14,6 +17,7 @@ use crate::chef::models;
 #[derive(Debug)]
 pub struct FoodRow {
     title: String,
+    subtitle: String,
 }
 
 #[derive(Default, Debug)]
@@ -42,12 +46,14 @@ impl FactoryComponent for FoodRow {
             set_orientation: gtk::Orientation::Horizontal,
             adw::ComboRow {
                 set_title: &self.title,
+                set_subtitle: &self.subtitle,
             }
         }
     }
     fn init_model(init: Self::Init, index: &Self::Index, sender: relm4::prelude::FactorySender<Self>) -> Self {
         Self {
             title: init.name,
+            subtitle: init.brand,
         }
     }
 }

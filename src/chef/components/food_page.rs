@@ -15,7 +15,20 @@ use relm4::{
     Component
 };
 
-use self::{food_form::{FormMessage, FormModel, FormState}, food_list::{FoodListMessage, FoodListModel, FoodListState}};
+use crate::chef::models::Food;
+
+use food_form::{
+    FormMessage,
+    FormModel,
+    FormState
+};
+use food_list::{
+    FoodListMessage,
+    FoodListModel,
+    FoodListState
+};
+
+use self::food_list::FoodListCommand;
 
 #[derive(Debug)]
 pub struct PageModel{
@@ -30,6 +43,7 @@ pub struct PageState;
 pub enum PageCommand {
     #[default]
     NoCommand,
+    Load(Vec<Food>),
 }
 
 #[derive(Default, Debug)]
@@ -76,5 +90,18 @@ impl SimpleComponent for PageModel {
         let model = PageModel { food_form, food_list };
         let widgets = view_output!();
         ComponentParts { model, widgets }
+    }
+    fn update(&mut self, message: Self::Input, sender: relm4::prelude::ComponentSender<Self>) {
+        match message {
+            PageCommand::NoCommand => {}
+            PageCommand::Load(foodlist) => {
+                for food in foodlist {
+                    self.food_list.emit(
+                        FoodListCommand::AddEntry(food)
+                    );
+                }
+                todo!("")
+            }    
+        }
     }
 }

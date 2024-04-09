@@ -2,7 +2,7 @@ mod food_row;
 
 use relm4::ComponentSender;
 use relm4::{adw, gtk};
-use relm4::factory::FactoryVecDeque;
+use relm4::factory::{DynamicIndex, FactoryVecDeque};
 use gtk::prelude::{
     ButtonExt, ToggleButtonExt,
     WidgetExt, OrientableExt,
@@ -15,7 +15,7 @@ use relm4::{ComponentParts, SimpleComponent};
 use food_row::FoodRow;
 
 use self::food_row::FoodRowCommand;
-// use crate::chef::models::Food;
+use crate::chef::models::Food;
 
 #[derive(Default, Debug)]
 pub struct FoodListState {
@@ -32,6 +32,8 @@ pub struct FoodListModel {
 pub enum FoodListCommand {
     #[default]
     NoCommand,
+    AddEntry(Food),
+    DeleteEntry(DynamicIndex)
 }
 
 #[derive(Default, Debug)]
@@ -69,8 +71,10 @@ impl SimpleComponent for FoodListModel {
         let foodlist = FactoryVecDeque::builder()
             .launch_default()
             .forward(sender.input_sender(), |cmd| match cmd {
-               FoodRowCommand::NoCommand =>
-                   FoodListCommand::NoCommand, 
+                FoodRowCommand::NoCommand =>
+                    FoodListCommand::NoCommand, 
+                FoodRowCommand::DeleteMe(index) =>
+                    FoodListCommand::DeleteEntry(index)   
             });
         let model = FoodListModel {
             state, foodlist
@@ -79,5 +83,17 @@ impl SimpleComponent for FoodListModel {
         let widgets = view_output!();
 
         ComponentParts { model, widgets }
+    }
+
+    fn update(&mut self, message: Self::Input, sender: ComponentSender<Self>) {
+        match message {
+            FoodListCommand::NoCommand => {}
+            FoodListCommand::AddEntry(food) => {
+                self.foodlist.guard().push_back(food);
+            }
+            FoodListCommand::DeleteEntry(index) => {
+                self.foodlist.guard().remove(index.current_index());
+            }
+        }
     }
 }

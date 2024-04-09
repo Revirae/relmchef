@@ -1,3 +1,4 @@
+use relm4::factory::DynamicIndex;
 use relm4::{adw, gtk};
 use relm4::prelude::FactoryComponent;
 use gtk::prelude::{
@@ -19,6 +20,7 @@ pub struct FoodRow {
 pub enum FoodRowCommand {
     #[default]
     NoCommand,
+    DeleteMe(DynamicIndex),
 }
 
 #[derive(Default, Debug)]
@@ -27,7 +29,7 @@ pub enum FoodRowMessage {
     NoMessage,
 }
 
-#[relm4::factory]
+#[relm4::factory(pub)]
 impl FactoryComponent for FoodRow {
     type Init = models::Food;
     type Input = FoodRowCommand;

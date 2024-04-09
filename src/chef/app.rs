@@ -1,7 +1,11 @@
 #![allow(unused)]
-use crate::chef::components::{header, food_page};
+use crate::chef::components::{
+    header,
+    food_page
+};
+use crate::chef::models;
 
-use relm4::{ adw, gtk};
+use relm4::{adw, gtk};
 use gtk::prelude::{
     GtkWindowExt, OrientableExt,
     WidgetExt
@@ -92,8 +96,18 @@ impl SimpleComponent for AppModel {
         let food_page = food_page::PageModel::builder()
             .launch(food_page::PageState::default())
             .forward(sender.input_sender(), |msg| match msg {
-                _ => { AppCommand::NoCommand }               
+                food_page::PageMessage::NoMessage => {
+                    AppCommand::NoCommand
+                }               
             });
+
+        let foodlist = vec![
+            models::Food {name: "a".into(), brand: "--".into()},
+            models::Food {name: "b".into(), brand: "brandy".into()},
+        ];
+        food_page.emit(
+            food_page::PageCommand::Load(foodlist)
+        );
         let model = AppModel { state, header, food_page };
         let widgets = view_output!();
 

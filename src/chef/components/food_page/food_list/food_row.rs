@@ -50,10 +50,11 @@ impl FactoryComponent for FoodRow {
             }
         }
     }
-    fn init_model(init: Self::Init, index: &Self::Index, sender: relm4::prelude::FactorySender<Self>) -> Self {
+
+    fn init_model(food: Self::Init, index: &Self::Index, sender: relm4::prelude::FactorySender<Self>) -> Self {
         Self {
-            title: init.name,
-            subtitle: init.brand,
+            title: food.name,
+            subtitle: food.brand,
         }
     }
 }

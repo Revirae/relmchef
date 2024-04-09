@@ -1,3 +1,7 @@
+use std::cell::{Cell, RefCell};
+use std::rc::Rc;
+
+use relm4::gtk::glib::value::ToValue;
 use relm4::{adw, gtk, prelude::ComponentSender};
 use gtk::prelude::{
     ButtonExt, ToggleButtonExt,
@@ -6,65 +10,58 @@ use gtk::prelude::{
 };
 use adw::prelude::PreferencesRowExt;
 
-use relm4::{ComponentParts, SimpleComponent};
+use relm4::{Component, ComponentParts, SimpleComponent};
+use relm4::{RelmContainerExt, RelmSetChildExt};
+
+use crate::chef::models;
+
 
 #[derive(Debug)]
-pub struct FormModel {
-    state: FormState,
+pub struct FoodFormModel {
+    state: models::Food,
 }
 
 #[derive(Default, Debug)]
-pub struct FormState {
-    name: String,
-    brand: String,
-    cost: f64,
-    weight: f64,
-    volume: f64
-}
-
-#[derive(Default, Debug)]
-pub enum FormCommand {
+pub enum FoodFormCommand {
     #[default]
     NoCommand,
     ChangeName(String),
     ChangeBrand(String),
     ChangeCost(f64),
     ChangeWeight(f64),
-    ChangeVolume(f64)
+    ChangeVolume(f64),
 }
 
 #[derive(Default, Debug)]
-pub enum FormMessage {
+pub enum FoodFormMessage {
     #[default]
     NoMessage,
     Changed,
+    Submit(models::Food),
 }
 
 #[relm4::component(pub)]
-impl SimpleComponent for FormModel {
-    type Init = FormState;
-    type Input = FormCommand;
-    type Output = FormMessage;
+impl SimpleComponent for FoodFormModel {
+    type Init = models::Food;
+    type Input = FoodFormCommand;
+    type Output = FoodFormMessage;
     view! {
         #[root]
         gtk::Box {
             set_orientation: gtk::Orientation::Horizontal,
+            #[name(name_entry)]
             adw::EntryRow {
                 #[watch]
                 set_text: model.state.name.as_ref(),
                 set_title: "Nome",
             },
+            #[name(brand_entry)]
             adw::EntryRow {
                 #[watch]
                 set_text: model.state.brand.as_ref(),
                 set_title: "Marca",
-                connect_changed => move |entry| {
-                    sender.input(
-                        FormCommand::ChangeBrand(entry.text().to_string())
-                    );
-                }
-                
             },
+            #[name(cost_entry)]
             adw::SpinRow {
                 set_title: "Custo",
                 #[watch]
@@ -74,6 +71,7 @@ impl SimpleComponent for FormModel {
                     0., 0., 9999., 0.05, 0.5, 10.
                 )),
             },
+            #[name(weight_entry)]
             adw::SpinRow {
                 set_title: "Peso",
                 #[watch]
@@ -83,6 +81,7 @@ impl SimpleComponent for FormModel {
                     0., 0., 9999., 0.05, 0.5, 10.
                 )),
             },
+            #[name(volume_entry)]
             adw::SpinRow {
                 set_title: "Volume",
                 #[watch]
@@ -99,34 +98,73 @@ impl SimpleComponent for FormModel {
             root: Self::Root,
             sender: ComponentSender<Self>,
     ) -> ComponentParts<Self> {
-        let state = FormState::default();
-        let model = FormModel { state };
+        let state = models::Food::default();
+        let model = FoodFormModel { state };
         let widgets = view_output!();
+
+        let _sender = sender.clone();
+        widgets.name_entry.connect_changed(move |entry| {
+            _sender.input(FoodFormCommand::ChangeName(
+                entry.text().to_string()
+            ));
+        });       
+
+        let _sender = sender.clone();
+        widgets.brand_entry.connect_changed(move |entry| {
+            _sender.input(FoodFormCommand::ChangeBrand(
+                entry.text().to_string()
+            ))
+        });       
+
+        let _sender = sender.clone();
+        widgets.cost_entry.connect_changed(move |entry| {
+            _sender.input(FoodFormCommand::ChangeCost(
+                entry.value()
+            ))
+        });
+
+        let _sender = sender.clone();
+        widgets.weight_entry.connect_changed(move |entry| {
+            _sender.input(FoodFormCommand::ChangeWeight(
+                entry.value()
+            ))
+        });
+
+        let _sender = sender.clone();
+        widgets.volume_entry.connect_changed(move |entry| {
+            _sender.input(FoodFormCommand::ChangeVolume(
+                entry.value()
+            ))
+        });
+
         ComponentParts { model, widgets }
     }
-
+    fn update_cmd(&mut self, input: &relm4::Sender<Self::Input>, output: relm4::Sender<Self::Output>) {
+        // match output {
+        //     FoodFormMessage::ChangedName(name) => {
+        //     }
+        // }
+    }
+    // fn update_view(&self, widgets: &mut Self::Widgets, sender: ComponentSender<Self>) {
+    // }
+    
     fn update(&mut self, message: Self::Input, sender: ComponentSender<Self>) {
         match message {
-            FormCommand::NoCommand => {}
-            FormCommand::ChangeName(text) => {
+            FoodFormCommand::NoCommand => {}
+            FoodFormCommand::ChangeName(text) => {
                 self.state.name = text;
-                sender.output(FormMessage::Changed);
             }
-            FormCommand::ChangeBrand(text) => {
+            FoodFormCommand::ChangeBrand(text) => {
                 self.state.brand = text;
-                sender.output(FormMessage::Changed);
             }
-            FormCommand::ChangeCost(value) => {
-                self.state.cost= value;
-                sender.output(FormMessage::Changed);
+            FoodFormCommand::ChangeCost(value) => {
+                self.state.cost = value;
             }
-            FormCommand::ChangeWeight(value) => {
+            FoodFormCommand::ChangeWeight(value) => {
                 self.state.weight = value;
-                sender.output(FormMessage::Changed);
             }
-            FormCommand::ChangeVolume(value) => {
+            FoodFormCommand::ChangeVolume(value) => {
                 self.state.volume = value;
-                sender.output(FormMessage::Changed);
             }
         }
     }

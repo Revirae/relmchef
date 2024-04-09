@@ -47,7 +47,7 @@ pub enum AppMessage {
 pub struct AppModel {
     state: AppState,
     header: Controller<header::Model>,
-    food_page: Controller<food_page::PageModel>,
+    food_page: Controller<food_page::FoodPageModel>,
 }
 
 #[relm4::component(pub)]
@@ -93,20 +93,22 @@ impl SimpleComponent for AppModel {
                 header::Tab::Recipe =>
                     AppCommand::SetMode(AppMode::Recipes)
             });
-        let food_page = food_page::PageModel::builder()
-            .launch(food_page::PageState::default())
+        let food_page = food_page::FoodPageModel::builder()
+            .launch(food_page::FoodPageState::default())
             .forward(sender.input_sender(), |msg| match msg {
-                food_page::PageMessage::NoMessage => {
+                food_page::FoodPageMessage::NoMessage => {
                     AppCommand::NoCommand
                 }               
+                food_page::FoodPageMessage::Store(foodlist) => {
+                    todo!("persistence");
+                }
             });
-
         let foodlist = vec![
-            models::Food {name: "a".into(), brand: "--".into()},
-            models::Food {name: "b".into(), brand: "brandy".into()},
+            models::Food {name: "a".into(), brand: "--".into(), ..Default::default()},
+            models::Food {name: "b".into(), brand: "brandy".into(), ..Default::default()},
         ];
         food_page.emit(
-            food_page::PageCommand::Load(foodlist)
+            food_page::FoodPageCommand::Load(foodlist)
         );
         let model = AppModel { state, header, food_page };
         let widgets = view_output!();

@@ -18,9 +18,8 @@ use relm4::{
 use crate::chef::models::Food;
 
 use food_form::{
-    FormMessage,
-    FormModel,
-    FormState
+    FoodFormMessage,
+    FoodFormModel,
 };
 use food_list::{
     FoodListMessage,
@@ -30,33 +29,48 @@ use food_list::{
 
 use self::food_list::FoodListCommand;
 
+
+#[derive(Default, Debug)]
+pub enum FoodPageMode {
+    #[default]
+    Inserting,
+    Editing,
+    Filtering,
+}
+
+#[derive(Default, Debug)]
+pub struct FoodPageState {
+    mode: FoodPageMode,
+    foodlist: Vec<Food>,
+}
+
 #[derive(Debug)]
-pub struct PageModel{
-    food_form: Controller<FormModel>,
+pub struct FoodPageModel {
+    state: FoodPageState,
+    food_form: Controller<FoodFormModel>,
     food_list: Controller<FoodListModel>,
 }
 
 #[derive(Default, Debug)]
-pub struct PageState;
-
-#[derive(Default, Debug)]
-pub enum PageCommand {
+pub enum FoodPageCommand {
     #[default]
     NoCommand,
     Load(Vec<Food>),
+    Append(Food),
 }
 
 #[derive(Default, Debug)]
-pub enum PageMessage {
+pub enum FoodPageMessage {
     #[default]
     NoMessage,
+    Store(Vec<Food>)
 }
 
 #[relm4::component(pub)]
-impl SimpleComponent for PageModel {
-    type Init = PageState;
-    type Input = PageCommand;
-    type Output = PageMessage;
+impl SimpleComponent for FoodPageModel  {
+    type Init = FoodPageState;
+    type Input = FoodPageCommand;
+    type Output = FoodPageMessage;
     view! {
         #[root]
         gtk::Box {
@@ -70,38 +84,56 @@ impl SimpleComponent for PageModel {
             root: Self::Root,
             sender: relm4::prelude::ComponentSender<Self>,
     ) -> ComponentParts<Self> {
-        let food_form = FormModel::builder()
-            .launch(FormState::default())
+        let food_form = FoodFormModel::builder()
+            .launch(Food::default())
             .forward(sender.input_sender(), |msg| match msg {
-                FormMessage::NoMessage => {
-                    PageCommand::NoCommand
+                FoodFormMessage::NoMessage => {
+                    FoodPageCommand::NoCommand
                 }
-                FormMessage::Changed => {
-                    PageCommand::NoCommand
+                FoodFormMessage::Changed => {
+                    FoodPageCommand::NoCommand
+                }
+                FoodFormMessage::Submit(food) => {
+                    FoodPageCommand::Append(food)    
                 }
             });
         let food_list = FoodListModel::builder()
             .launch(FoodListState::default())
             .forward(sender.input_sender(), |msg| match msg {
                 FoodListMessage::NoMessage => {
-                    PageCommand::NoCommand
+                    FoodPageCommand::NoCommand
                 }
             });
-        let model = PageModel { food_form, food_list };
+        let state = FoodPageState::default();
+        let model = FoodPageModel  {
+            state,
+            food_form,
+            food_list
+        };
         let widgets = view_output!();
         ComponentParts { model, widgets }
     }
     fn update(&mut self, message: Self::Input, sender: relm4::prelude::ComponentSender<Self>) {
         match message {
-            PageCommand::NoCommand => {}
-            PageCommand::Load(foodlist) => {
+            FoodPageCommand::NoCommand => {}
+            FoodPageCommand::Load(foodlist) => {
+                self.state.foodlist = foodlist.clone();
                 for food in foodlist {
                     self.food_list.emit(
                         FoodListCommand::AddEntry(food)
                     );
                 }
-                todo!("")
             }    
+            FoodPageCommand::Append(food) => {
+                match self.state.mode {
+                    FoodPageMode::Inserting => {
+                        self.food_list.emit(
+                            FoodListCommand::AddEntry(food)
+                        );
+                    }
+                    _ => {}
+                }
+            }
         }
     }
 }

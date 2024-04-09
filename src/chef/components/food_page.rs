@@ -130,6 +130,7 @@ impl SimpleComponent for FoodPageModel  {
                         self.food_list.emit(
                             FoodListCommand::AddEntry(food)
                         );
+                        println!("EMITTED");
                     }
                     _ => {}
                 }

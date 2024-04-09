@@ -48,9 +48,7 @@ impl SimpleComponent for PageModel {
         gtk::Box {
             set_orientation: gtk::Orientation::Vertical,
             model.food_form.widget(),           
-            gtk::Label {
-                set_label: "food page",
-            }
+            model.food_list.widget(),
         }
     }
     fn init(

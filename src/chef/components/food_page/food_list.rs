@@ -1,4 +1,8 @@
-use relm4::{adw, gtk, prelude::ComponentSender};
+mod food_row;
+
+use relm4::ComponentSender;
+use relm4::{adw, gtk};
+use relm4::factory::FactoryVecDeque;
 use gtk::prelude::{
     ButtonExt, ToggleButtonExt,
     WidgetExt, OrientableExt,
@@ -8,12 +12,19 @@ use adw::prelude::PreferencesRowExt;
 
 use relm4::{ComponentParts, SimpleComponent};
 
+use food_row::FoodRow;
+
+use self::food_row::FoodRowCommand;
+// use crate::chef::models::Food;
+
 #[derive(Default, Debug)]
-pub struct FoodListState;
+pub struct FoodListState {
+}
 
 #[derive(Debug)]
 pub struct FoodListModel {
     state: FoodListState,
+    foodlist: FactoryVecDeque<FoodRow>,
 }
 
 
@@ -39,8 +50,12 @@ impl SimpleComponent for FoodListModel {
         #[root]
         gtk::Box {
             set_orientation: gtk::Orientation::Vertical,
-            adw::ComboRow {
-                set_title: "Nome",
+            gtk::ScrolledWindow {
+                set_vexpand: true,
+                set_min_content_height: 360,
+
+                #[local_ref]
+                food_listbox -> gtk::ListBox {}
             }
         }
     }
@@ -50,7 +65,17 @@ impl SimpleComponent for FoodListModel {
             sender: ComponentSender<Self>,
         ) -> ComponentParts<Self> {
         let state = FoodListState::default();
-        let model = FoodListModel { state };
+
+        let foodlist = FactoryVecDeque::builder()
+            .launch_default()
+            .forward(sender.input_sender(), |cmd| match cmd {
+               FoodRowCommand::NoCommand =>
+                   FoodListCommand::NoCommand, 
+            });
+        let model = FoodListModel {
+            state, foodlist
+        };
+        let food_listbox = model.foodlist.widget();
         let widgets = view_output!();
 
         ComponentParts { model, widgets }

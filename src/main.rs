@@ -1,11 +1,11 @@
 mod chef;
 
 use relm4::RelmApp;
-use chef::app;
+use chef::app::{AppModel, AppState};
 
 fn main () {
     let app = RelmApp::new("relm4.chef.main");
-    app.run::<app::AppModel>(
-        app::AppState::default()
-    )    
+    app.run::<AppModel>(
+        AppState::default()
+    );
 }

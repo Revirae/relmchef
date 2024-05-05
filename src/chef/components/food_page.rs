@@ -55,7 +55,7 @@ pub struct FoodPageModel {
 pub enum FoodPageCommand {
     #[default]
     NoCommand,
-    Load(Vec<Food>),
+    LoadFoodlist(Vec<Food>),
     Append(Food),
 }
 
@@ -63,7 +63,7 @@ pub enum FoodPageCommand {
 pub enum FoodPageMessage {
     #[default]
     NoMessage,
-    Store(Vec<Food>)
+    CommitFoodlist(Vec<Food>)
 }
 
 #[relm4::component(pub)]
@@ -116,7 +116,7 @@ impl SimpleComponent for FoodPageModel  {
     fn update(&mut self, message: Self::Input, sender: relm4::prelude::ComponentSender<Self>) {
         match message {
             FoodPageCommand::NoCommand => {}
-            FoodPageCommand::Load(foodlist) => {
+            FoodPageCommand::LoadFoodlist(foodlist) => {
                 self.state.foodlist = foodlist.clone();
                 for food in foodlist {
                     self.food_list.emit(
@@ -130,7 +130,6 @@ impl SimpleComponent for FoodPageModel  {
                         self.food_list.emit(
                             FoodListCommand::AddEntry(food)
                         );
-                        println!("EMITTED");
                     }
                     _ => {}
                 }

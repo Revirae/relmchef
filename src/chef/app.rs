@@ -1,10 +1,14 @@
 #![allow(unused)]
+use std::fs::File;
+use std::io::BufReader;
+
 use crate::chef::components::{
     header,
     food_page
 };
 use crate::chef::models;
 
+use relm4::gtk::glib::{FileError, SpawnWithinJoinHandle};
 use relm4::{adw, gtk};
 use gtk::prelude::{
     GtkWindowExt, OrientableExt,
@@ -19,6 +23,11 @@ use relm4::{
     ComponentController
 };
 use relm4::RelmWidgetExt;
+use serde::{Deserialize, Serialize};
+
+use super::components::food_page::{FoodPageCommand, FoodPageMessage, FoodPageModel, FoodPageState};
+use super::components::header::HeaderModel;
+use super::models::Food;
 
 #[derive(Default, Debug)]
 pub enum AppMode {
@@ -32,13 +41,28 @@ pub struct AppState {
     page: String,
 }
 
+#[derive(Serialize, Deserialize)]
+pub struct AppData {
+    foodlist: Vec<Food>,
+}
+
+impl AppData {
+    fn from_file(path: &str) -> std::io::Result<Self> {
+        let file = File::open(path)?;
+        let reader = BufReader::new(file);
+
+        let data = serde_json::from_reader(reader)?;
+        Ok(data)
+    }
+}
+
 #[derive(Default, Debug)]
 pub enum AppCommand {
     #[default] 
     NoCommand,
-    SetMode(AppMode)
+    SetMode(AppMode),
+    StoreFoodlist(Vec<Food>),   
 }
-
 
 #[derive(Debug)]
 pub enum AppMessage {
@@ -46,8 +70,9 @@ pub enum AppMessage {
 
 pub struct AppModel {
     state: AppState,
-    header: Controller<header::Model>,
-    food_page: Controller<food_page::FoodPageModel>,
+    data: AppData,
+    header: Controller<HeaderModel>,
+    food_page: Controller<FoodPageModel>,
 }
 
 #[relm4::component(pub)]
@@ -85,7 +110,7 @@ impl SimpleComponent for AppModel {
             sender: ComponentSender<Self>,
     ) -> ComponentParts<Self> {
         let state = AppState::default();
-        let header: Controller<header::Model> = header::Model::builder()
+        let header: Controller<HeaderModel> = HeaderModel::builder()
             .launch(())
             .forward(sender.input_sender(), |msg| match msg {
                 header::Tab::Food => 
@@ -93,24 +118,28 @@ impl SimpleComponent for AppModel {
                 header::Tab::Recipe =>
                     AppCommand::SetMode(AppMode::Recipes)
             });
-        let food_page = food_page::FoodPageModel::builder()
-            .launch(food_page::FoodPageState::default())
+        let food_page = FoodPageModel::builder()
+            .launch(FoodPageState::default())
             .forward(sender.input_sender(), |msg| match msg {
-                food_page::FoodPageMessage::NoMessage => {
+                FoodPageMessage::NoMessage => {
                     AppCommand::NoCommand
                 }               
-                food_page::FoodPageMessage::Store(foodlist) => {
-                    todo!("persistence");
+                FoodPageMessage::CommitFoodlist(foodlist) => {
+                    AppCommand::StoreFoodlist(foodlist)
                 }
             });
-        let foodlist = vec![
-            models::Food {name: "a".into(), brand: "--".into(), ..Default::default()},
-            models::Food {name: "b".into(), brand: "brandy".into(), ..Default::default()},
-        ];
+        
+        let data = AppData {
+            foodlist: vec![
+                Food {name: "a".into(), brand: "--".into(), ..Default::default()},
+                Food {name: "b".into(), brand: "brandy".into(), ..Default::default()},
+            ],
+        };
+        
         food_page.emit(
-            food_page::FoodPageCommand::Load(foodlist)
+            FoodPageCommand::LoadFoodlist(data.foodlist.clone())
         );
-        let model = AppModel { state, header, food_page };
+        let model = AppModel { state, data, header, food_page };
         let widgets = view_output!();
 
         ComponentParts { model, widgets }
@@ -124,6 +153,9 @@ impl SimpleComponent for AppModel {
                     AppMode::Recipes =>
                         "recipe_page".to_owned(),
                 }
+            }
+            AppCommand::StoreFoodlist(foodlist) => {
+                self.data.foodlist = foodlist;
             }
             AppCommand::NoCommand => {}
         }

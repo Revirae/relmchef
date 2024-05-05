@@ -52,76 +52,82 @@ impl Component for FoodFormModel {
     view! {
         #[root]
         gtk::Box {
-            set_orientation: gtk::Orientation::Horizontal,
-            #[name(name_entry)]
-            adw::EntryRow {
-                set_title: "Nome",
-                connect_changed[sender] => move |entry| {
-                    let name = entry.text().to_string();
-                    sender.input(
-                        FoodFormCommand::ChangeName(name)
-                    )
-                }
-            },
-            #[name(brand_entry)]
-            adw::EntryRow {
-                set_title: "Marca",
-                connect_changed[sender] => move |entry| {
-                    let brand = entry.text().to_string();
-                    sender.input(
-                        FoodFormCommand::ChangeBrand(brand)
-                    )
-                }
-            },
-            #[name(cost_entry)]
-            adw::SpinRow {
-                set_title: "Custo",
-                set_digits: 2,
-                set_adjustment: Some(&gtk::Adjustment::new(
-                    0., 0., 9999., 0.05, 0.5, 10.
-                )),
-                connect_changed[sender] => move |entry| {
-                    let cost = entry.value();
-                    sender.input(
-                        FoodFormCommand::ChangeCost(cost)
-                    )
-                }
-            },
-            #[name(weight_entry)]
-            adw::SpinRow {
-                set_title: "Peso",
-                set_digits: 2,
-                set_adjustment: Some(&gtk::Adjustment::new(
-                    0., 0., 9999., 0.05, 0.5, 10.
-                )),
-                connect_changed[sender] => move |entry| {
-                    let weight = entry.value();
-                    sender.input(
-                        FoodFormCommand::ChangeWeight(weight)
-                    )
-                }
-            },
-            #[name(volume_entry)]
-            adw::SpinRow {
-                set_title: "Volume",
-                set_digits: 2,
-                set_activatable: true,
-                set_adjustment: Some(&gtk::Adjustment::new(
-                    0., 0., 9999., 0.05, 0.5, 10.
-                )),
-                connect_changed[sender] => move |entry| {
-                    let volume = entry.value();
-                    sender.input(
-                        FoodFormCommand::ChangeVolume(volume)
-                    )
+            set_orientation: gtk::Orientation::Vertical,
+            gtk::Box {
+                set_orientation: gtk::Orientation::Horizontal,
+                #[name(name_entry)]
+                adw::EntryRow {
+                    set_title: "Nome",
+                    set_hexpand: true,
+                    connect_changed[sender] => move |entry| {
+                        let name = entry.text().to_string();
+                        sender.input(
+                            FoodFormCommand::ChangeName(name)
+                        )
+                    }
+                },
+                #[name(brand_entry)]
+                adw::EntryRow {
+                    set_title: "Marca",
+                    connect_changed[sender] => move |entry| {
+                        let brand = entry.text().to_string();
+                        sender.input(
+                            FoodFormCommand::ChangeBrand(brand)
+                        )
+                    }
+                },
+                gtk::Button {
+                    connect_clicked[sender] => move |_| {
+                        sender.input(FoodFormCommand::Send)
+                    }
                 },
             },
-            gtk::Button {
-                connect_clicked[sender] => move |_| {
-                    println!("ACTIVATED");
-                    sender.input(FoodFormCommand::Send)
-                }
-            },
+            gtk::Box {
+                set_orientation: gtk::Orientation::Horizontal,
+                #[name(cost_entry)]
+                adw::SpinRow {
+                    set_title: "Custo",
+                    set_digits: 2,
+                    set_adjustment: Some(&gtk::Adjustment::new(
+                        0., 0., 9999., 0.05, 0.5, 10.
+                    )),
+                    connect_changed[sender] => move |entry| {
+                        let cost = entry.value();
+                        sender.input(
+                            FoodFormCommand::ChangeCost(cost)
+                        )
+                    }
+                },
+                #[name(weight_entry)]
+                adw::SpinRow {
+                    set_title: "Peso",
+                    set_digits: 2,
+                    set_adjustment: Some(&gtk::Adjustment::new(
+                        0., 0., 9999., 0.05, 0.5, 10.
+                    )),
+                    connect_changed[sender] => move |entry| {
+                        let weight = entry.value();
+                        sender.input(
+                            FoodFormCommand::ChangeWeight(weight)
+                        )
+                    }
+                },
+                #[name(volume_entry)]
+                adw::SpinRow {
+                    set_title: "Volume",
+                    set_digits: 2,
+                    set_activatable: true,
+                    set_adjustment: Some(&gtk::Adjustment::new(
+                        0., 0., 9999., 0.05, 0.5, 10.
+                    )),
+                    connect_changed[sender] => move |entry| {
+                        let volume = entry.value();
+                        sender.input(
+                            FoodFormCommand::ChangeVolume(volume)
+                        )
+                    },
+                },
+            }
         }
     }
     fn init(
@@ -136,15 +142,6 @@ impl Component for FoodFormModel {
 
         ComponentParts { model, widgets }
     }
-    // fn update_cmd(&mut self, input: &relm4::Sender<Self::Input>, output: relm4::Sender<Self::Output>) {
-        // match output {
-        //     FoodFormMessage::ChangedName(name) => {
-        //     }
-        // }
-    // }
-    // fn update_view(&self, widgets: &mut Self::Widgets, sender: ComponentSender<Self>) {
-        // widgets.name_entry.set_text(self.state.name.as_str());
-    // }
     
     fn update(&mut self, message: Self::Input, sender: ComponentSender<Self>, root: &Self::Root) {
         match message {
@@ -153,7 +150,6 @@ impl Component for FoodFormModel {
                 sender.output(FoodFormMessage::Submit(
                     self.state.clone()
                 ));
-                println!("SENT");
             }
             FoodFormCommand::ChangeName(text) => {
                 self.state.name = text;

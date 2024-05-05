@@ -8,11 +8,12 @@ use crate::chef::components::{
 };
 use crate::chef::models;
 
+use relm4::prelude::*;
 use relm4::gtk::glib::{FileError, SpawnWithinJoinHandle};
 use relm4::{adw, gtk};
 use gtk::prelude::{
     GtkWindowExt, OrientableExt,
-    WidgetExt
+    WidgetExt, ApplicationExt
 };
 use relm4::{
     SimpleComponent,
@@ -51,7 +52,7 @@ impl AppState {
     }
 }
 
-#[derive(Default, Serialize, Deserialize)]
+#[derive(Default, Debug, Serialize, Deserialize)]
 pub struct AppData {
     foodlist: Vec<Food>,
 }
@@ -65,9 +66,9 @@ impl AppData {
         Ok(data)
     }
     fn to_file(&self, path: String) -> std::io::Result<()> {
-        let file = File::open(path)?;
+        let file = File::create(path)?;
         let writer = BufWriter::new(file);
-        
+        dbg!(self);
         serde_json::to_writer(writer, self)?;
         Ok(())
     }
@@ -77,10 +78,11 @@ impl AppData {
 pub enum AppCommand {
     #[default] 
     NoCommand,
+    CloseRequest,
     LoadDatabase,
     PersistDatabase,
     SetMode(AppMode),
-    StoreFoodlist(Vec<Food>),   
+    AddFood(Food),
 }
 
 #[derive(Debug)]
@@ -104,6 +106,11 @@ impl SimpleComponent for AppModel {
         gtk::Window {
             set_title: Some("Chef"),
             set_titlebar: Some(model.header.widget()),
+            connect_close_request[sender] => move |_| {
+                sender.input(AppCommand::CloseRequest);
+                gtk::glib::Propagation::Stop
+            },
+
             #[name(main_stack)]
             gtk::Stack {
                 #[watch]
@@ -128,7 +135,7 @@ impl SimpleComponent for AppModel {
             root: Self::Root,
             sender: ComponentSender<Self>,
     ) -> ComponentParts<Self> {
-        let state = AppState::default();
+        // let state = AppState::default();
         let header: Controller<HeaderModel> = HeaderModel::builder()
             .launch(())
             .forward(sender.input_sender(), |msg| match msg {
@@ -143,29 +150,25 @@ impl SimpleComponent for AppModel {
                 FoodPageMessage::NoMessage => {
                     AppCommand::NoCommand
                 }               
-                FoodPageMessage::CommitFoodlist(foodlist) => {
-                    AppCommand::StoreFoodlist(foodlist)
+                FoodPageMessage::CommitFood(food) => {
+                    AppCommand::AddFood(food)
                 }
             });
         
-        // let data = AppData {
-        //     foodlist: vec![
-        //         Food {name: "a".into(), brand: "--".into(), ..Default::default()},
-        //         Food {name: "b".into(), brand: "brandy".into(), ..Default::default()},
-        //     ],
-        // };
-        let data = AppData::from_file("chef.db".into()).unwrap_or_default();
-        
-        food_page.emit(
-            FoodPageCommand::LoadFoodlist(data.foodlist.clone())
-        );
-        let model = AppModel { state, data, header, food_page };
+        let data = AppData::default();        
+        sender.input(AppCommand::LoadDatabase);
+
+        let model = AppModel { state: init, data, header, food_page };
         let widgets = view_output!();
 
         ComponentParts { model, widgets }
     }
     fn update(&mut self, message: Self::Input, sender: ComponentSender<Self>) {
         match message {
+            AppCommand::CloseRequest => {
+                sender.input(AppCommand::PersistDatabase);
+                relm4::main_application().quit();
+            }
             AppCommand::SetMode(mode) => {
                 self.state.page = match mode {
                     AppMode::FoodInventory => 
@@ -177,12 +180,16 @@ impl SimpleComponent for AppModel {
             AppCommand::LoadDatabase => {
                 self.data = AppData::from_file(self.state.database_path.clone())
                     .unwrap_or_default();
+                self.food_page.emit(
+                    FoodPageCommand::LoadFoodlist(self.data.foodlist.clone())
+                );
             }
             AppCommand::PersistDatabase => {
-                self.data.to_file(self.state.database_path.clone());
+                self.data.to_file(self.state.database_path.clone())
+                    .expect("failed saving database");
             }
-            AppCommand::StoreFoodlist(foodlist) => {
-                self.data.foodlist = foodlist;
+            AppCommand::AddFood(food) => {
+                self.data.foodlist.push(food);
             }
             AppCommand::NoCommand => {}
         }

@@ -86,7 +86,8 @@ impl Component for FoodFormModel {
                 set_orientation: gtk::Orientation::Horizontal,
                 #[name(cost_entry)]
                 adw::SpinRow {
-                    set_title: "Custo",
+                    set_hexpand: true,
+                    set_title: "<span size='x-small'>Preço</span>",
                     set_digits: 2,
                     set_adjustment: Some(&gtk::Adjustment::new(
                         0., 0., 9999., 0.05, 0.5, 10.
@@ -100,7 +101,8 @@ impl Component for FoodFormModel {
                 },
                 #[name(weight_entry)]
                 adw::SpinRow {
-                    set_title: "Peso",
+                    set_hexpand: true,
+                    set_title: "<span size='x-small'>Peso</span>",
                     set_digits: 2,
                     set_adjustment: Some(&gtk::Adjustment::new(
                         0., 0., 9999., 0.05, 0.5, 10.
@@ -114,7 +116,8 @@ impl Component for FoodFormModel {
                 },
                 #[name(volume_entry)]
                 adw::SpinRow {
-                    set_title: "Volume",
+                    set_hexpand: true,
+                    set_title: "<span size='x-small'>Volume</span>",
                     set_digits: 2,
                     set_activatable: true,
                     set_adjustment: Some(&gtk::Adjustment::new(
@@ -147,6 +150,7 @@ impl Component for FoodFormModel {
         match message {
             FoodFormCommand::NoCommand => {}
             FoodFormCommand::Send => {
+                // todo!("validation");
                 sender.output(FoodFormMessage::Submit(
                     self.state.clone()
                 ));

@@ -63,7 +63,7 @@ pub enum FoodPageCommand {
 pub enum FoodPageMessage {
     #[default]
     NoMessage,
-    CommitFoodlist(Vec<Food>)
+    CommitFood(Food)
 }
 
 #[relm4::component(pub)]
@@ -128,7 +128,10 @@ impl SimpleComponent for FoodPageModel  {
                 match self.state.mode {
                     FoodPageMode::Inserting => {
                         self.food_list.emit(
-                            FoodListCommand::AddEntry(food)
+                            FoodListCommand::AddEntry(food.clone())
+                        );
+                        sender.output(
+                            FoodPageMessage::CommitFood(food)
                         );
                     }
                     _ => {}

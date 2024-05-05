@@ -57,7 +57,15 @@ impl SimpleComponent for FoodListModel {
                 set_min_content_height: 360,
 
                 #[local_ref]
-                food_listbox -> gtk::ListBox {}
+                food_listbox -> gtk::ListBox {
+                    // set_selection_mode: gtk::SelectionMode::None,
+                    // set_activate_on_single_click: false,
+                    // set_css_classes: &[&"boxed-list"],
+                    // set_sensitive: false,
+                    // set_receives_default: false,
+                    // set_activatable: false,
+                    // set_selectable: false,
+                }
             }
         }
     }
@@ -80,6 +88,10 @@ impl SimpleComponent for FoodListModel {
             state, foodlist
         };
         let food_listbox = model.foodlist.widget();
+        // food_listbox.set_selection_mode(gtk::SelectionMode::None);
+        // food_listbox.set_focusable(false);
+        // food_listbox.set_can_focus(false);
+        // food_listbox.bind_model(, )
         let widgets = view_output!();
 
         ComponentParts { model, widgets }

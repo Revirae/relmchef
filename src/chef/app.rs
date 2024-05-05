@@ -1,6 +1,6 @@
 #![allow(unused)]
 use std::fs::File;
-use std::io::BufReader;
+use std::io::{BufReader, BufWriter};
 
 use crate::chef::components::{
     header,
@@ -38,21 +38,38 @@ pub enum AppMode {
 
 #[derive(Default)]
 pub struct AppState {
+    database_path: String,
     page: String,
 }
 
-#[derive(Serialize, Deserialize)]
+impl AppState {
+    pub fn new(database_path: String) -> Self {
+        AppState {
+            database_path,
+            ..Default::default()
+        }
+    }
+}
+
+#[derive(Default, Serialize, Deserialize)]
 pub struct AppData {
     foodlist: Vec<Food>,
 }
 
 impl AppData {
-    fn from_file(path: &str) -> std::io::Result<Self> {
+    fn from_file(path: String) -> std::io::Result<Self> {
         let file = File::open(path)?;
         let reader = BufReader::new(file);
 
         let data = serde_json::from_reader(reader)?;
         Ok(data)
+    }
+    fn to_file(&self, path: String) -> std::io::Result<()> {
+        let file = File::open(path)?;
+        let writer = BufWriter::new(file);
+        
+        serde_json::to_writer(writer, self)?;
+        Ok(())
     }
 }
 
@@ -60,6 +77,8 @@ impl AppData {
 pub enum AppCommand {
     #[default] 
     NoCommand,
+    LoadDatabase,
+    PersistDatabase,
     SetMode(AppMode),
     StoreFoodlist(Vec<Food>),   
 }
@@ -129,12 +148,13 @@ impl SimpleComponent for AppModel {
                 }
             });
         
-        let data = AppData {
-            foodlist: vec![
-                Food {name: "a".into(), brand: "--".into(), ..Default::default()},
-                Food {name: "b".into(), brand: "brandy".into(), ..Default::default()},
-            ],
-        };
+        // let data = AppData {
+        //     foodlist: vec![
+        //         Food {name: "a".into(), brand: "--".into(), ..Default::default()},
+        //         Food {name: "b".into(), brand: "brandy".into(), ..Default::default()},
+        //     ],
+        // };
+        let data = AppData::from_file("chef.db".into()).unwrap_or_default();
         
         food_page.emit(
             FoodPageCommand::LoadFoodlist(data.foodlist.clone())
@@ -153,6 +173,13 @@ impl SimpleComponent for AppModel {
                     AppMode::Recipes =>
                         "recipe_page".to_owned(),
                 }
+            }
+            AppCommand::LoadDatabase => {
+                self.data = AppData::from_file(self.state.database_path.clone())
+                    .unwrap_or_default();
+            }
+            AppCommand::PersistDatabase => {
+                self.data.to_file(self.state.database_path.clone());
             }
             AppCommand::StoreFoodlist(foodlist) => {
                 self.data.foodlist = foodlist;

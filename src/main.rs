@@ -6,6 +6,6 @@ use chef::app::{AppModel, AppState};
 fn main () {
     let app = RelmApp::new("relm4.chef.main");
     app.run::<AppModel>(
-        AppState::default()
+        AppState::new("./chef.db".into())
     );
 }

@@ -27,7 +27,7 @@ use food_list::{
     FoodListState
 };
 
-use self::{food_form::FoodFormCommand, food_list::FoodListCommand};
+use self::{food_form::{FoodFormAction, FoodFormCommand}, food_list::FoodListCommand};
 
 
 #[derive(Default, Debug)]
@@ -56,7 +56,7 @@ pub enum FoodPageCommand {
     #[default]
     NoCommand,
     LoadFoodlist(Vec<Food>),
-    Append(Food),
+    Put(Food),
     Remove(usize),
     Update(usize),
 }
@@ -98,7 +98,7 @@ impl SimpleComponent for FoodPageModel  {
                     FoodPageCommand::NoCommand
                 }
                 FoodFormMessage::Submit(food) => {
-                    FoodPageCommand::Append(food)    
+                    FoodPageCommand::Put(food)    
                 }
             });
         let food_list = FoodListModel::builder()
@@ -134,7 +134,7 @@ impl SimpleComponent for FoodPageModel  {
                     );
                 }
             }    
-            FoodPageCommand::Append(food) => {
+            FoodPageCommand::Put(food) => {
                 match self.state.mode {
                     FoodPageMode::Editing(index) => {
                         self.food_list.emit(
@@ -164,11 +164,14 @@ impl SimpleComponent for FoodPageModel  {
             }
             FoodPageCommand::Update(index) => {
                 let food = self.state.foodlist.remove(index);
-                // let food = self.state.foodlist.get()
                 self.food_form.emit(
                     FoodFormCommand::Receive(food)
                 );
                 self.state.mode = FoodPageMode::Editing(index);
+                eprintln!("color---");
+                self.food_form.emit(
+                    FoodFormCommand::ChangeIcon("document-save".into())
+                );
             }
         }
     }

@@ -30,6 +30,7 @@ pub enum FoodFormCommand {
     NoCommand,
     Send,
     Receive(models::Food),
+    ChangeIcon(String),
     ChangeName(String),
     ChangeBrand(String),
     ChangeCost(f64),
@@ -50,6 +51,7 @@ pub enum FoodFormAction {
     #[default]
     NoAction,
     Fill,
+    ChangeButtonIcon(String),
 }
 
 #[relm4::component(pub)]
@@ -87,7 +89,10 @@ impl Component for FoodFormModel {
                         )
                     }
                 },
+                #[name(send_button)]
                 gtk::Button {
+                    set_icon_name: "document-new",
+                    set_size_request: (50, 32),
                     connect_clicked[sender] => move |_| {
                         sender.input(FoodFormCommand::Send)
                     }
@@ -172,6 +177,9 @@ impl Component for FoodFormModel {
                 widgets.weight_entry.set_value(self.state.weight);
                 widgets.volume_entry.set_value(self.state.volume);
             }
+            FoodFormAction::ChangeButtonIcon(icon_code) => {
+                widgets.send_button.set_icon_name(&icon_code);
+            }
             FoodFormAction::NoAction => {}
         }
     }
@@ -192,7 +200,11 @@ impl Component for FoodFormModel {
                     sender.emit(FoodFormAction::Fill)
                 );
             }
-            
+            FoodFormCommand::ChangeIcon(color_code) => {
+                sender.spawn_command(|sender| {
+                    sender.emit(FoodFormAction::ChangeButtonIcon(color_code))
+                });
+            }
             FoodFormCommand::ChangeName(text) => {
                 self.state.name = text;
             }

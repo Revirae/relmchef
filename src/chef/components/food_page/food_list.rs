@@ -34,6 +34,7 @@ pub enum FoodListCommand {
     #[default]
     NoCommand,
     AddEntry(Food),
+    InsertEntry(usize, Food),
     DeleteEntry(DynamicIndex),
     UpdateEntry(DynamicIndex)
 }
@@ -107,6 +108,10 @@ impl SimpleComponent for FoodListModel {
             FoodListCommand::AddEntry(food) => {
                 self.foodlist.guard().push_back(food);
             }
+            FoodListCommand::InsertEntry(index, food) => {
+                self.foodlist.guard().remove(index);
+                self.foodlist.guard().insert(index, food);
+            }
             FoodListCommand::DeleteEntry(index) => {
                 let i = index.current_index();
                 self.foodlist.guard().remove(i);
@@ -114,7 +119,7 @@ impl SimpleComponent for FoodListModel {
             }
             FoodListCommand::UpdateEntry(index) => {
                 let i = index.current_index();
-                self.foodlist.guard().remove(i);
+                // self.foodlist.guard().remove(i);
                 sender.output(FoodListMessage::RequestUpdate(i));
             }
         }

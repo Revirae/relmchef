@@ -84,6 +84,7 @@ pub enum AppCommand {
     SetMode(AppMode),
     AddFood(Food),
     RemoveFood(usize),
+    UpdateFood(usize, Food),
     // SendToForm(Food),
 }
 
@@ -158,9 +159,9 @@ impl SimpleComponent for AppModel {
                 FoodPageMessage::CommitFoodRemoval(index) => {
                     AppCommand::RemoveFood(index)
                 }
-                // FoodPageMessage::Send(food) => {
-                    // AppCommand::SendToForm(food)
-                // }
+                FoodPageMessage::CommitFoodUpdate(index, food) => {
+                    AppCommand::UpdateFood(index, food)
+                }
             });
         
         let data = AppData::default();        
@@ -197,14 +198,20 @@ impl SimpleComponent for AppModel {
                     .expect("failed saving database");
             }
             AppCommand::AddFood(food) => {
+                let food = Food{
+                    id: uuid::Uuid::new_v4(),
+                    ..food
+                };
                 self.data.foodlist.push(food);
             }
             AppCommand::RemoveFood(index) => {
                 dbg!(index);
                 self.data.foodlist.remove(index);
             }
-            // AppCommand::SendToForm(food) => {
-            // }
+            AppCommand::UpdateFood(index, food) => {
+                self.data.foodlist.remove(index);
+                self.data.foodlist.insert(index, food);
+            }
             AppCommand::NoCommand => {}
         }
     }

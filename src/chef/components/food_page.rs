@@ -34,7 +34,7 @@ use self::{food_form::FoodFormCommand, food_list::FoodListCommand};
 pub enum FoodPageMode {
     #[default]
     Inserting,
-    Editing,
+    Editing(usize),
     Filtering,
 }
 
@@ -59,7 +59,6 @@ pub enum FoodPageCommand {
     Append(Food),
     Remove(usize),
     Update(usize),
-    // SendToForm(Food),
 }
 
 #[derive(Default, Debug)]
@@ -68,7 +67,7 @@ pub enum FoodPageMessage {
     NoMessage,
     CommitFood(Food),
     CommitFoodRemoval(usize),
-    // Send(Food),
+    CommitFoodUpdate(usize, Food),
 }
 
 #[relm4::component(pub)]
@@ -137,7 +136,14 @@ impl SimpleComponent for FoodPageModel  {
             }    
             FoodPageCommand::Append(food) => {
                 match self.state.mode {
-                    FoodPageMode::Editing |
+                    FoodPageMode::Editing(index) => {
+                        self.food_list.emit(
+                            FoodListCommand::InsertEntry(index, food.clone())
+                        );
+                        sender.output(
+                            FoodPageMessage::CommitFoodUpdate(index, food)
+                        );
+                    }
                     FoodPageMode::Inserting => {
                         self.food_list.emit(
                             FoodListCommand::AddEntry(food.clone())
@@ -158,10 +164,11 @@ impl SimpleComponent for FoodPageModel  {
             }
             FoodPageCommand::Update(index) => {
                 let food = self.state.foodlist.remove(index);
+                // let food = self.state.foodlist.get()
                 self.food_form.emit(
                     FoodFormCommand::Receive(food)
                 );
-                self.state.mode = FoodPageMode::Editing;
+                self.state.mode = FoodPageMode::Editing(index);
             }
         }
     }

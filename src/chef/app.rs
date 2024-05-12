@@ -209,7 +209,7 @@ impl SimpleComponent for AppModel {
                 self.data.foodlist.remove(index);
             }
             AppCommand::UpdateFood(index, food) => {
-                self.data.foodlist.remove(index);
+                // self.data.foodlist.remove(index);
                 self.data.foodlist.insert(index, food);
             }
             AppCommand::NoCommand => {}

@@ -143,8 +143,14 @@ impl SimpleComponent for FoodPageModel  {
                         sender.output(
                             FoodPageMessage::CommitFoodUpdate(index, food)
                         );
+                        self.state.mode = FoodPageMode::Inserting;
+
+                        self.food_form.emit(
+                            FoodFormCommand::ChangeIcon("document-new".into())
+                        ); //todo make them a CMD
                     }
                     FoodPageMode::Inserting => {
+                        self.state.foodlist.push(food.clone());
                         self.food_list.emit(
                             FoodListCommand::AddEntry(food.clone())
                         );
@@ -163,15 +169,16 @@ impl SimpleComponent for FoodPageModel  {
                 );
             }
             FoodPageCommand::Update(index) => {
-                let food = self.state.foodlist.remove(index);
+                // let food = self.state.foodlist.remove(index);
+                dbg!(self.state.foodlist.clone());
+                let food = self.state.foodlist.get(index).unwrap();
                 self.food_form.emit(
-                    FoodFormCommand::Receive(food)
+                    FoodFormCommand::Receive(food.clone())
                 );
                 self.state.mode = FoodPageMode::Editing(index);
-                eprintln!("color---");
                 self.food_form.emit(
                     FoodFormCommand::ChangeIcon("document-save".into())
-                );
+                );//todo make them a CMD
             }
         }
     }

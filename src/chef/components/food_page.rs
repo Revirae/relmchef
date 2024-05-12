@@ -27,7 +27,10 @@ use food_list::{
     FoodListState
 };
 
-use self::{food_form::{FoodFormAction, FoodFormCommand}, food_list::FoodListCommand};
+use self::{
+    food_form::{FoodFormAction, FoodFormCommand},
+    food_list::FoodListCommand
+};
 
 
 #[derive(Default, Debug)]
@@ -35,7 +38,7 @@ pub enum FoodPageMode {
     #[default]
     Inserting,
     Editing(usize),
-    Filtering,
+    // Filtering,
 }
 
 #[derive(Default, Debug)]
@@ -170,7 +173,7 @@ impl SimpleComponent for FoodPageModel  {
             }
             FoodPageCommand::Update(index) => {
                 // let food = self.state.foodlist.remove(index);
-                dbg!(self.state.foodlist.clone());
+                // dbg!(self.state.foodlist.clone());
                 let food = self.state.foodlist.get(index).unwrap();
                 self.food_form.emit(
                     FoodFormCommand::Receive(food.clone())

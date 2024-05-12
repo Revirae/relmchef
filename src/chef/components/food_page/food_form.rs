@@ -17,7 +17,7 @@ use relm4::{RelmContainerExt, RelmSetChildExt};
 
 use crate::chef::models;
 
-
+  
 #[derive(Debug)]
 pub struct FoodFormModel {
     state: models::Food,
@@ -155,7 +155,7 @@ impl Component for FoodFormModel {
             sender: ComponentSender<Self>,
     ) -> ComponentParts<Self> {
         let state = models::Food::default();
-        let buffer = models::Food::default();
+        // let buffer = models::Food::default();
         let model = FoodFormModel { state };
         let widgets = view_output!();
 

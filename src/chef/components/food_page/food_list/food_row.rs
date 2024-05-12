@@ -1,5 +1,6 @@
 #![allow(deprecated)]
-use libadwaita::{builders::ComboRowBuilder, ComboRow};
+use libadwaita::{builders::ComboRowBuilder, ComboRow, PreferencesRow};
+// use relm4::gtk::traits::BoxExt;
 use relm4::{factory::DynamicIndex, Component};
 use relm4::{gtk, ComponentController};
 use relm4::prelude::FactoryComponent;
@@ -8,11 +9,14 @@ use gtk::prelude::{
     WidgetExt, OrientableExt,
     EditableExt,
 };
-use libadwaita::prelude::ComboRowExt;
+use libadwaita::prelude::{PreferencesRowExt, ComboRowExt};
+use relm4::{RelmWidgetExt,RelmContainerExt,RelmSetChildExt};
 use relm4::adw::prelude::{
-    PreferencesRowExt,
+    // PreferencesRowExt,
     ActionRowExt,
     ComboBoxExt,
+    ListBoxRowExt,
+    BoxExt,
 };
 use relm4_components::simple_adw_combo_row::SimpleComboRow;
 
@@ -24,36 +28,40 @@ use crate::chef::models;
 pub struct FoodRow {
     title: String,
     subtitle: String,
+    index: DynamicIndex,
 }
 
 #[derive(Default, Debug)]
 pub enum FoodRowCommand {
     #[default]
     NoCommand,
-    DeleteMe(DynamicIndex),
+    Action(u32, DynamicIndex),
 }
 
 #[derive(Default, Debug)]
 pub enum FoodRowMessage {
     #[default]
     NoMessage,
+    DeleteMe(DynamicIndex)
 }
 
 #[relm4::factory(pub)]
 impl FactoryComponent for FoodRow {
     type Init = models::Food;
     type Input = FoodRowCommand;
-    type Output = FoodRowCommand;
+    type Output = FoodRowMessage;
     type CommandOutput = ();
     type ParentWidget = gtk::ListBox;
 
     view! {
+        // gtk::Box {
+            // append = 
         ComboRow {
             set_hexpand: true,
             set_title: &self.title,
             set_subtitle: &self.subtitle,
             // set_title_selectable: false,
-            
+        
             #[wrap(Some)]
             set_model = &gtk::StringList::new(&[
                 &"",
@@ -62,10 +70,9 @@ impl FactoryComponent for FoodRow {
             ]),
 
             // set_selected: CONFIG.game.enhancements.gamescope.window_type.ordinal() as u32,
-
-            connect_selected_notify => |row| unsafe {
-                dbg!(row.selected());
-            }
+            // connect_selected_notify[sender] => move |crow| unsafe {
+                // sender.input(FoodRowCommand::Action(crow.index(), self.index));
+            // }
         }
     }
 
@@ -76,24 +83,37 @@ impl FactoryComponent for FoodRow {
             returned_widget: &<Self::ParentWidget as relm4::factory::FactoryView>::ReturnedWidget,
             sender: relm4::prelude::FactorySender<Self>,
         ) -> Self::Widgets {
-        let menu_builder = SimpleComboRow::builder()
-            .launch(SimpleComboRow{
-                variants: vec!["a","b"],
-                active_index: None
-            })
-            .forward(sender.input_sender(), |_| FoodRowCommand::NoCommand);
-        let menu = menu_builder.widget();
-            // .widget();
-        // let menu = SimpleComc
-        let widgets = view_output!();
-        widgets
+            // root.set_model()
+            // sender.position()
+            let index = index.clone();
+            root.connect_selected_item_notify(move |cr|
+                sender.input(FoodRowCommand::Action(
+                    cr.selected(), 
+                    index.clone()
+                ))
+            );
+            let widgets = view_output!();     
+            widgets
     }
     fn init_model(food: Self::Init, index: &Self::Index, sender: relm4::prelude::FactorySender<Self>) -> Self {
-        // let menu = ComboRow::builder().build();
-        let menu: &ComboRow = SimpleComboRow::<String>::builder().widget();
         Self {
+            index: index.clone().into(),
             title: food.name,
             subtitle: food.brand,
+        }
+    }
+    fn update(&mut self, message: Self::Input, sender: relm4::prelude::FactorySender<Self>) {
+        match message {
+            FoodRowCommand::Action(action, index) => {
+                dbg!(action);
+                dbg!(index.clone());
+                let message = match action {
+                    2 => FoodRowMessage::DeleteMe(index),
+                    _ => FoodRowMessage::NoMessage,
+                };
+                sender.output(message);
+            }
+            FoodRowCommand::NoCommand => {}
         }
     }
 }

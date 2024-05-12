@@ -83,6 +83,7 @@ pub enum AppCommand {
     PersistDatabase,
     SetMode(AppMode),
     AddFood(Food),
+    RemoveFood(usize)
 }
 
 #[derive(Debug)]
@@ -153,6 +154,9 @@ impl SimpleComponent for AppModel {
                 FoodPageMessage::CommitFood(food) => {
                     AppCommand::AddFood(food)
                 }
+                FoodPageMessage::CommitFoodRemoval(index) => {
+                    AppCommand::RemoveFood(index)
+                }
             });
         
         let data = AppData::default();        
@@ -190,6 +194,10 @@ impl SimpleComponent for AppModel {
             }
             AppCommand::AddFood(food) => {
                 self.data.foodlist.push(food);
+            }
+            AppCommand::RemoveFood(index) => {
+                dbg!(index);
+                self.data.foodlist.remove(index);
             }
             AppCommand::NoCommand => {}
         }

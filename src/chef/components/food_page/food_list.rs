@@ -14,11 +14,12 @@ use relm4::{ComponentParts, SimpleComponent};
 
 use food_row::FoodRow;
 
-use self::food_row::FoodRowCommand;
+use self::food_row::{FoodRowCommand, FoodRowMessage};
 use crate::chef::models::Food;
 
 #[derive(Default, Debug)]
 pub struct FoodListState {
+    // index
 }
 
 #[derive(Debug)]
@@ -40,6 +41,8 @@ pub enum FoodListCommand {
 pub enum FoodListMessage {
     #[default]
     NoMessage,
+    RequestRemoval(usize),
+    // SubmitRemoval(usize),//todo uuid
 }
 
 
@@ -58,6 +61,7 @@ impl SimpleComponent for FoodListModel {
 
                 #[local_ref]
                 food_listbox -> gtk::ListBox {
+                    connect_row_activated => |_, row| {}
                     // set_selection_mode: gtk::SelectionMode::None,
                     // set_activate_on_single_click: false,
                     // set_css_classes: &[&"boxed-list"],
@@ -74,29 +78,29 @@ impl SimpleComponent for FoodListModel {
             root: Self::Root,
             sender: ComponentSender<Self>,
         ) -> ComponentParts<Self> {
-        let state = FoodListState::default();
-
         let foodlist = FactoryVecDeque::builder()
             .launch_default()
-            .forward(sender.input_sender(), |cmd| match cmd {
-                FoodRowCommand::NoCommand =>
-                    FoodListCommand::NoCommand, 
-                FoodRowCommand::DeleteMe(index) =>
-                    FoodListCommand::DeleteEntry(index)   
+            .forward(sender.input_sender(), |message| match message {
+                FoodRowMessage::NoMessage =>
+                    FoodListCommand::NoCommand,
+                FoodRowMessage::DeleteMe(index) =>
+                    FoodListCommand::DeleteEntry(index), //DeleteEntry
             });
         let model = FoodListModel {
-            state, foodlist
+            state: init,
+            foodlist
         };
         let food_listbox = model.foodlist.widget();
+        
         // food_listbox.set_selection_mode(gtk::SelectionMode::None);
-        // food_listbox.set_focusable(false);
-        // food_listbox.set_can_focus(false);
-        // food_listbox.bind_model(, )
         let widgets = view_output!();
 
         ComponentParts { model, widgets }
     }
 
+    // fn update_view(&self, widgets: &mut Self::Widgets, sender: ComponentSender<Self>) {
+        // widgets.food_listbox.act
+    // }
     fn update(&mut self, message: Self::Input, sender: ComponentSender<Self>) {
         match message {
             FoodListCommand::NoCommand => {}
@@ -104,7 +108,9 @@ impl SimpleComponent for FoodListModel {
                 self.foodlist.guard().push_back(food);
             }
             FoodListCommand::DeleteEntry(index) => {
-                self.foodlist.guard().remove(index.current_index());
+                let i = index.current_index();
+                self.foodlist.guard().remove(i);
+                sender.output(FoodListMessage::RequestRemoval(i));
             }
         }
     }

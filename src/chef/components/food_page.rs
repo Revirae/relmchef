@@ -57,13 +57,15 @@ pub enum FoodPageCommand {
     NoCommand,
     LoadFoodlist(Vec<Food>),
     Append(Food),
+    Remove(usize),
 }
 
 #[derive(Default, Debug)]
 pub enum FoodPageMessage {
     #[default]
     NoMessage,
-    CommitFood(Food)
+    CommitFood(Food),
+    CommitFoodRemoval(usize)
 }
 
 #[relm4::component(pub)]
@@ -103,6 +105,9 @@ impl SimpleComponent for FoodPageModel  {
                 FoodListMessage::NoMessage => {
                     FoodPageCommand::NoCommand
                 }
+                FoodListMessage::RequestRemoval(index) => {
+                    FoodPageCommand::Remove(index)
+                }
             });
         let state = FoodPageState::default();
         let model = FoodPageModel  {
@@ -136,6 +141,13 @@ impl SimpleComponent for FoodPageModel  {
                     }
                     _ => {}
                 }
+            }
+            FoodPageCommand::Remove(index) => {
+                // dbg!(index);
+                self.state.foodlist.remove(index);
+                sender.output(
+                    FoodPageMessage::CommitFoodRemoval(index)
+                );
             }
         }
     }

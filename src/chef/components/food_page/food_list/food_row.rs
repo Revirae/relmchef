@@ -42,7 +42,8 @@ pub enum FoodRowCommand {
 pub enum FoodRowMessage {
     #[default]
     NoMessage,
-    DeleteMe(DynamicIndex)
+    DeleteMe(DynamicIndex),
+    UpdateMe(DynamicIndex),
 }
 
 #[relm4::factory(pub)]
@@ -109,6 +110,7 @@ impl FactoryComponent for FoodRow {
                 dbg!(index.clone());
                 let message = match action {
                     2 => FoodRowMessage::DeleteMe(index),
+                    1 => FoodRowMessage::UpdateMe(index),
                     _ => FoodRowMessage::NoMessage,
                 };
                 sender.output(message);

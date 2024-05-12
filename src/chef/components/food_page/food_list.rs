@@ -34,7 +34,8 @@ pub enum FoodListCommand {
     #[default]
     NoCommand,
     AddEntry(Food),
-    DeleteEntry(DynamicIndex)
+    DeleteEntry(DynamicIndex),
+    UpdateEntry(DynamicIndex)
 }
 
 #[derive(Default, Debug)]
@@ -42,7 +43,7 @@ pub enum FoodListMessage {
     #[default]
     NoMessage,
     RequestRemoval(usize),
-    // SubmitRemoval(usize),//todo uuid
+    RequestUpdate(usize),
 }
 
 
@@ -85,6 +86,8 @@ impl SimpleComponent for FoodListModel {
                     FoodListCommand::NoCommand,
                 FoodRowMessage::DeleteMe(index) =>
                     FoodListCommand::DeleteEntry(index), //DeleteEntry
+                FoodRowMessage::UpdateMe(index) =>
+                    FoodListCommand::UpdateEntry(index),
             });
         let model = FoodListModel {
             state: init,
@@ -98,9 +101,6 @@ impl SimpleComponent for FoodListModel {
         ComponentParts { model, widgets }
     }
 
-    // fn update_view(&self, widgets: &mut Self::Widgets, sender: ComponentSender<Self>) {
-        // widgets.food_listbox.act
-    // }
     fn update(&mut self, message: Self::Input, sender: ComponentSender<Self>) {
         match message {
             FoodListCommand::NoCommand => {}
@@ -111,6 +111,11 @@ impl SimpleComponent for FoodListModel {
                 let i = index.current_index();
                 self.foodlist.guard().remove(i);
                 sender.output(FoodListMessage::RequestRemoval(i));
+            }
+            FoodListCommand::UpdateEntry(index) => {
+                let i = index.current_index();
+                self.foodlist.guard().remove(i);
+                sender.output(FoodListMessage::RequestUpdate(i));
             }
         }
     }

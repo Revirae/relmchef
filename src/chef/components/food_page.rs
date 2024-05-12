@@ -27,7 +27,7 @@ use food_list::{
     FoodListState
 };
 
-use self::food_list::FoodListCommand;
+use self::{food_form::FoodFormCommand, food_list::FoodListCommand};
 
 
 #[derive(Default, Debug)]
@@ -58,6 +58,8 @@ pub enum FoodPageCommand {
     LoadFoodlist(Vec<Food>),
     Append(Food),
     Remove(usize),
+    Update(usize),
+    // SendToForm(Food),
 }
 
 #[derive(Default, Debug)]
@@ -65,7 +67,8 @@ pub enum FoodPageMessage {
     #[default]
     NoMessage,
     CommitFood(Food),
-    CommitFoodRemoval(usize)
+    CommitFoodRemoval(usize),
+    // Send(Food),
 }
 
 #[relm4::component(pub)]
@@ -108,6 +111,9 @@ impl SimpleComponent for FoodPageModel  {
                 FoodListMessage::RequestRemoval(index) => {
                     FoodPageCommand::Remove(index)
                 }
+                FoodListMessage::RequestUpdate(index) => {
+                    FoodPageCommand::Update(index)
+                }
             });
         let state = FoodPageState::default();
         let model = FoodPageModel  {
@@ -131,6 +137,7 @@ impl SimpleComponent for FoodPageModel  {
             }    
             FoodPageCommand::Append(food) => {
                 match self.state.mode {
+                    FoodPageMode::Editing |
                     FoodPageMode::Inserting => {
                         self.food_list.emit(
                             FoodListCommand::AddEntry(food.clone())
@@ -148,6 +155,13 @@ impl SimpleComponent for FoodPageModel  {
                 sender.output(
                     FoodPageMessage::CommitFoodRemoval(index)
                 );
+            }
+            FoodPageCommand::Update(index) => {
+                let food = self.state.foodlist.remove(index);
+                self.food_form.emit(
+                    FoodFormCommand::Receive(food)
+                );
+                self.state.mode = FoodPageMode::Editing;
             }
         }
     }

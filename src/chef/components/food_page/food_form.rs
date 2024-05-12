@@ -1,3 +1,4 @@
+// use adw::gtk::traits::BoxExt;
 use relm4::{adw, gtk, prelude::ComponentSender};
 use gtk::prelude::{
     ButtonExt, ToggleButtonExt,
@@ -28,6 +29,7 @@ pub enum FoodFormCommand {
     #[default]
     NoCommand,
     Send,
+    Receive(models::Food),
     ChangeName(String),
     ChangeBrand(String),
     ChangeCost(f64),
@@ -43,12 +45,19 @@ pub enum FoodFormMessage {
     Submit(models::Food),
 }
 
+#[derive(Default, Debug)]
+pub enum FoodFormAction {
+    #[default]
+    NoAction,
+    Fill,
+}
+
 #[relm4::component(pub)]
 impl Component for FoodFormModel {
     type Init = models::Food;
     type Input = FoodFormCommand;
     type Output = FoodFormMessage;
-    type CommandOutput = ();
+    type CommandOutput = FoodFormAction;
     view! {
         #[root]
         gtk::Box {
@@ -57,6 +66,8 @@ impl Component for FoodFormModel {
                 set_orientation: gtk::Orientation::Horizontal,
                 #[name(name_entry)]
                 adw::EntryRow {
+                    // #[watch(skip_init)]
+                    // set_text: self.state.name.as_ref(),
                     set_title: "Nome",
                     set_hexpand: true,
                     connect_changed[sender] => move |entry| {
@@ -145,6 +156,25 @@ impl Component for FoodFormModel {
 
         ComponentParts { model, widgets }
     }
+
+    fn update_cmd_with_view(
+            &mut self,
+            widgets: &mut Self::Widgets,
+            message: Self::CommandOutput,
+            sender: ComponentSender<Self>,
+            root: &Self::Root,
+        ) {
+        match message {
+            FoodFormAction::Fill => {
+                widgets.name_entry.set_text(&self.state.name);
+                widgets.brand_entry.set_text(&self.state.brand);
+                widgets.cost_entry.set_value(self.state.cost);
+                widgets.weight_entry.set_value(self.state.weight);
+                widgets.volume_entry.set_value(self.state.volume);
+            }
+            FoodFormAction::NoAction => {}
+        }
+    }
     
     fn update(&mut self, message: Self::Input, sender: ComponentSender<Self>, root: &Self::Root) {
         match message {
@@ -155,6 +185,14 @@ impl Component for FoodFormModel {
                     self.state.clone()
                 ));
             }
+            FoodFormCommand::Receive(food) => {
+                dbg!(food.clone());
+                self.state = food;
+                sender.spawn_command(|sender|
+                    sender.emit(FoodFormAction::Fill)
+                );
+            }
+            
             FoodFormCommand::ChangeName(text) => {
                 self.state.name = text;
             }

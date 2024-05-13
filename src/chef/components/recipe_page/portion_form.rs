@@ -6,7 +6,7 @@ use crate::chef::models;
 
 #[derive(Debug)]
 pub struct PortionFormModel {
-    state: models::Portion,
+    state: models::FoodPortion,
 }
 
 #[derive(Default, Debug)]
@@ -25,7 +25,7 @@ pub enum PortionFormCommand {
 
 #[relm4::component(pub)]
 impl Component for PortionFormModel {
-    type Init = models::Portion;
+    type Init = models::FoodPortion;
     type Input = PortionFormCommand;
     type Output = PortionFormMessage;
     type CommandOutput = ();

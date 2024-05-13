@@ -1,5 +1,6 @@
 // #![allow(deprecated)]
-use relm4::{factory::{DynamicIndex, FactoryComponent}, gtk};
+use relm4::gtk;
+use relm4::factory::{DynamicIndex, FactoryComponent};
 use libadwaita::ComboRow;
 use libadwaita::prelude::{PreferencesRowExt, ComboRowExt};
 use relm4::adw::prelude::ActionRowExt;
@@ -31,7 +32,7 @@ pub enum PortionRowMessage {
 
 #[relm4::factory(pub)]
 impl FactoryComponent for PortionRow {
-    type Init = models::Portion;
+    type Init = models::FoodPortion;
     type Input = PortionRowCommand;
     type Output = PortionRowMessage;
     type CommandOutput = ();
@@ -62,7 +63,7 @@ impl FactoryComponent for PortionRow {
             &mut self,
             index: &Self::Index,
             root: Self::Root,
-            returned_widget: &<Self::ParentWidget as relm4::factory::FactoryView>::ReturnedWidget,
+            _returned_widget: &<Self::ParentWidget as relm4::factory::FactoryView>::ReturnedWidget,
             sender: relm4::prelude::FactorySender<Self>,
         ) -> Self::Widgets {
             let index = index.clone();
@@ -75,11 +76,11 @@ impl FactoryComponent for PortionRow {
             let widgets = view_output!();     
             widgets
     }
-    fn init_model(portion: Self::Init, index: &Self::Index, sender: relm4::prelude::FactorySender<Self>) -> Self {
+    fn init_model(portion: Self::Init, index: &Self::Index, _sender: relm4::prelude::FactorySender<Self>) -> Self {
         Self {
             index: index.clone().into(),
-            title: portion.id.to_string(),
-            subtitle: String::new(),
+            title: portion.ingredient.name,
+            subtitle: portion.recipe.name,
         }
     }
 }

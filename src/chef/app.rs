@@ -190,13 +190,13 @@ impl SimpleComponent for AppModel {
                     AppCommand::UpdateRecipe(id, recipe)
                 }
                 RecipePageMessage::CommitPortion(portion) => {
-                    AppCommand::AddPortion(portion)
+                    AppCommand::AddPortion(portion.inner)
                 }
                 RecipePageMessage::CommitPortionRemoval(index) => {
                     AppCommand::RemovePortion(index)
                 }
                 RecipePageMessage::CommitPortionUpdate(index, portion) => {
-                    AppCommand::UpdatePortion(index, portion)
+                    AppCommand::UpdatePortion(index, portion.inner)
                 }
             });
         

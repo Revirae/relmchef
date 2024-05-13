@@ -1,11 +1,6 @@
 use serde::{Serialize, Deserialize};
 use uuid::Uuid;
 
-// pub trait Ingredient {
-    // type IngredientType;
-    // fn register(ingredient: Self) -> Self;
-    // fn ingredient_type(&self) -> IngredientType;
-// }
 
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub enum IngredientType {
@@ -40,18 +35,9 @@ pub struct Portion {
     pub amount_u: usize,
 }
 
-// impl Ingredient for Food {
-    // fn ingredient_type(&self) -> IngredientType {
-        // self.ingredient_type        
-    // }
-// }
-
-// impl Ingredient {
-    // fn register(ingredient: T) -> T {
-        // T {
-            // id: Uuid::new_v4(),
-            // ..ingredient
-        // }
-    // }
-// }
-
+#[derive(Debug, Default, Clone)]
+pub struct FoodPortion {
+    pub inner: Portion,
+    pub ingredient: Food,
+    pub recipe: Recipe,
+}

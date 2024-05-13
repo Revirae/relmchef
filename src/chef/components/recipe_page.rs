@@ -16,6 +16,7 @@ use relm4::{
 use gtk::prelude::OrientableExt;
 use uuid::Uuid;
 
+use crate::chef::models::FoodPortion;
 use crate::chef::{components, models};
 use components::recipe_page::portion_form::PortionFormMessage;
 use components::recipe_page::portion_list::{PortionListMessage, PortionListModel, PortionListState};
@@ -45,7 +46,7 @@ pub enum RecipePageMode {
 pub struct RecipePageState {
     mode: RecipePageMode,
     recipelist: Vec<models::Recipe>,
-    portionlist: Vec<models::Portion>,
+    portionlist: Vec<models::FoodPortion>,
 }
 
 #[derive(Debug)]
@@ -67,8 +68,8 @@ pub enum RecipePageCommand {
     RemoveRecipe(usize),
     UpdateRecipe(usize),
 
-    LoadPortionList(Vec<models::Portion>),
-    PutPortion(models::Portion),
+    LoadPortionList(Vec<models::FoodPortion>),
+    PutPortion(models::FoodPortion),
     RemovePortion(usize),
     UpdatePortion(usize),
 }
@@ -82,9 +83,9 @@ pub enum RecipePageMessage {
     CommitRecipeRemoval(Uuid),
     CommitRecipeUpdate(Uuid, Recipe),
 
-    CommitPortion(Portion),
+    CommitPortion(models::FoodPortion),
     CommitPortionRemoval(Uuid),
-    CommitPortionUpdate(Uuid, Portion),
+    CommitPortionUpdate(Uuid, models::FoodPortion),
 }
 
 #[relm4::component(pub)]
@@ -118,7 +119,7 @@ impl SimpleComponent for RecipePageModel  {
                 }
             });
         let portion_form = PortionFormModel::builder()
-            .launch(Portion::default())
+            .launch(FoodPortion::default())
             .forward(sender.input_sender(), |msg| match msg {
                 PortionFormMessage::NoMessage => {
                     RecipePageCommand::NoCommand
@@ -233,7 +234,7 @@ impl SimpleComponent for RecipePageModel  {
                             PortionListCommand::InsertEntry(index, portion.clone())
                         );
                         sender.output(
-                            RecipePageMessage::CommitPortionUpdate(portion.id, portion)
+                            RecipePageMessage::CommitPortionUpdate(portion.inner.id, portion)
                         ).expect("failed to commit portion update");
                         self.state.mode = RecipePageMode::InsertingRecipe;
 
@@ -263,7 +264,7 @@ impl SimpleComponent for RecipePageModel  {
             RecipePageCommand::UpdatePortion(index) => {
                 let portion= self.state.portionlist.get(index).unwrap();
                 self.portion_form.emit(
-                    PortionFormCommand::Receive(portion.clone())
+                    PortionFormCommand::Receive(portion.clone().inner)
                 );
                 self.state.mode = RecipePageMode::EditingRecipe(index);
                 // self.recipe_form.emit(

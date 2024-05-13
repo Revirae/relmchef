@@ -1,4 +1,5 @@
 pub mod portion_row;
+use self::portion_row::PortionRow;
 
 use relm4::ComponentSender;
 use relm4::gtk;
@@ -9,10 +10,9 @@ use gtk::prelude::{
 
 use relm4::{ComponentParts, SimpleComponent};
 
-use crate::chef::components::recipe_page::portion_list::portion_row::PortionRowMessage;
-use crate::chef::models::Portion;
-
-use self::portion_row::PortionRow;
+use crate::chef::{ components, models };
+use components::recipe_page::portion_list::portion_row::PortionRowMessage;
+use models::FoodPortion;
 
 
 #[derive(Default, Debug)]
@@ -30,8 +30,8 @@ pub struct PortionListModel {
 pub enum PortionListCommand {
     #[default]
     NoCommand,
-    AddEntry(Portion),
-    InsertEntry(usize, Portion),
+    AddEntry(FoodPortion),
+    InsertEntry(usize, FoodPortion),
     DeleteEntry(DynamicIndex),
     UpdateEntry(DynamicIndex)
 }

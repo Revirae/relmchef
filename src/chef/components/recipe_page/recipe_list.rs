@@ -1,4 +1,5 @@
 mod recipe_row;
+// mod portion_row;
 
 use relm4::ComponentSender;
 use relm4::{adw, gtk};
@@ -12,8 +13,10 @@ use adw::prelude::PreferencesRowExt;
 
 use relm4::{ComponentParts, SimpleComponent};
 
+use crate::chef::components::recipe_page::portion_list::PortionListCommand;
 use crate::chef::components::recipe_page::recipe_list::recipe_row::RecipeRowMessage;
-use crate::chef::models::Recipe;
+use crate::chef::components::recipe_page::portion_list::portion_row::{PortionRow, PortionRowMessage};
+use crate::chef::models::{Portion, Recipe};
 
 use self::recipe_row::RecipeRow;
 
@@ -32,10 +35,14 @@ pub struct RecipeListModel {
 pub enum RecipeListCommand {
     #[default]
     NoCommand,
-    AddEntry(Recipe),
+    AddRecipeEntry(Recipe),
     InsertEntry(usize, Recipe),
     DeleteEntry(DynamicIndex),
-    UpdateEntry(DynamicIndex)
+    UpdateEntry(DynamicIndex),
+    // AddPortionEntry(Portion),
+    // InsertPortionEntry(usize, Portion),
+    // DeletePortionEntry(DynamicIndex),
+    // UpdatePortionEntry(DynamicIndex)
 }
 
 #[derive(Default, Debug)]
@@ -44,6 +51,8 @@ pub enum RecipeListMessage {
     NoMessage,
     RequestRemoval(usize),
     RequestUpdate(usize),
+    // RequestPortionRemoval(usize),
+    // RequestPortionUpdate(usize),
 }
 
 
@@ -104,7 +113,7 @@ impl SimpleComponent for RecipeListModel {
     fn update(&mut self, message: Self::Input, sender: ComponentSender<Self>) {
         match message {
             RecipeListCommand::NoCommand => {}
-            RecipeListCommand::AddEntry(recipe) => {
+            RecipeListCommand::AddRecipeEntry(recipe) => {
                 self.recipelist.guard().push_back(recipe);
             }
             RecipeListCommand::InsertEntry(index, recipe) => {

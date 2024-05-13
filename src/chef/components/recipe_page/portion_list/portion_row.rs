@@ -4,9 +4,7 @@ use libadwaita::{builders::ComboRowBuilder, ComboRow, PreferencesRow};
 use libadwaita::prelude::{PreferencesRowExt, ComboRowExt};
 use relm4::{RelmWidgetExt,RelmContainerExt,RelmSetChildExt};
 use relm4::adw::prelude::{
-    // PreferencesRowExt,
     ActionRowExt,
-    ComboBoxExt,
     ListBoxRowExt,
     BoxExt,
 };
@@ -19,21 +17,21 @@ use gtk::prelude::{
 use crate::chef::models;
 
 #[derive(Debug)]
-pub struct RecipeRow {
+pub struct PortionRow {
     title: String,
     subtitle: String,
     index: DynamicIndex,
 }
 
 #[derive(Default, Debug)]
-pub enum RecipeRowCommand {
+pub enum PortionRowCommand {
     #[default]
     NoCommand,
     Action(u32, DynamicIndex),
 }
 
 #[derive(Default, Debug)]
-pub enum RecipeRowMessage {
+pub enum PortionRowMessage {
     #[default]
     NoMessage,
     DeleteMe(DynamicIndex),
@@ -41,10 +39,10 @@ pub enum RecipeRowMessage {
 }
 
 #[relm4::factory(pub)]
-impl FactoryComponent for RecipeRow {
-    type Init = models::Recipe;
-    type Input = RecipeRowCommand;
-    type Output = RecipeRowMessage;
+impl FactoryComponent for PortionRow {
+    type Init = models::Portion;
+    type Input = PortionRowCommand;
+    type Output = PortionRowMessage;
     type CommandOutput = ();
     type ParentWidget = gtk::ListBox;
 
@@ -64,7 +62,7 @@ impl FactoryComponent for RecipeRow {
 
             // set_selected: CONFIG.game.enhancements.gamescope.window_type.ordinal() as u32,
             // connect_selected_notify[sender] => move |crow| unsafe {
-                // sender.input(RecipeRowCommand::Action(crow.index(), self.index));
+                // sender.input(PortionRowCommand::Action(crow.index(), self.index));
             // }
         }
     }
@@ -78,7 +76,7 @@ impl FactoryComponent for RecipeRow {
         ) -> Self::Widgets {
             let index = index.clone();
             root.connect_selected_item_notify(move |cr|
-                sender.input(RecipeRowCommand::Action(
+                sender.input(PortionRowCommand::Action(
                     cr.selected(), 
                     index.clone()
                 ))
@@ -86,10 +84,10 @@ impl FactoryComponent for RecipeRow {
             let widgets = view_output!();     
             widgets
     }
-    fn init_model(recipe: Self::Init, index: &Self::Index, sender: relm4::prelude::FactorySender<Self>) -> Self {
+    fn init_model(portion: Self::Init, index: &Self::Index, sender: relm4::prelude::FactorySender<Self>) -> Self {
         Self {
             index: index.clone().into(),
-            title: recipe.name,
+            title: portion.id.to_string(),
             subtitle: String::new(),
         }
     }

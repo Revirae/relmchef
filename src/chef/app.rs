@@ -1,5 +1,7 @@
 // #![allow(unused)]
-use std::collections::HashMap;
+mod cuisine;
+
+// use std::collections::HashMap;
 use std::fs::File;
 use std::io::{BufReader, BufWriter};
 use uuid::Uuid;
@@ -20,6 +22,8 @@ use relm4::{
     ComponentController
 };
 use serde::{Deserialize, Serialize};
+
+use self::cuisine::Cuisine;
 
 use super::components::food_page::{FoodPageCommand, FoodPageMessage, FoodPageModel, FoodPageState};
 use super::components::header::HeaderModel;
@@ -51,9 +55,9 @@ impl AppState {
 #[derive(Default, Debug, Serialize, Deserialize)]
 pub struct AppData {
     // foodlist: Vec<Food>,
-    foodlist: HashMap<Uuid, Food>,
-    recipelist: Vec<Recipe>,
-    portionlist: Vec<Portion>,
+    // recipelist: Vec<Recipe>,
+    // portionlist: Vec<Portion>,
+    cuisine: Cuisine,
 }
 
 impl AppData {
@@ -85,11 +89,11 @@ pub enum AppCommand {
     RemoveFood(Uuid),
     UpdateFood(Uuid, Food),
     AddRecipe(Recipe),
-    RemoveRecipe(usize),
-    UpdateRecipe(usize, Recipe),
+    RemoveRecipe(Uuid),
+    UpdateRecipe(Uuid, Recipe),
     AddPortion(Portion),
-    RemovePortion(usize),
-    UpdatePortion(usize, Portion),
+    RemovePortion(Uuid),
+    UpdatePortion(Uuid, Portion),
     // SendToForm(Food),
 }
 
@@ -163,11 +167,11 @@ impl SimpleComponent for AppModel {
                 FoodPageMessage::CommitFood(food) => {
                     AppCommand::AddFood(food)
                 }
-                FoodPageMessage::CommitFoodRemoval(index) => {
-                    AppCommand::RemoveFood(index)
+                FoodPageMessage::CommitFoodRemoval(id) => {
+                    AppCommand::RemoveFood(id)
                 }
-                FoodPageMessage::CommitFoodUpdate(index, food) => {
-                    AppCommand::UpdateFood(index, food)
+                FoodPageMessage::CommitFoodUpdate(id, food) => {
+                    AppCommand::UpdateFood(id, food)
                 }
             });
         let recipe_page = RecipePageModel::builder()
@@ -179,11 +183,11 @@ impl SimpleComponent for AppModel {
                 RecipePageMessage::CommitRecipe(recipe) => {
                     AppCommand::AddRecipe(recipe)
                 }
-                RecipePageMessage::CommitRecipeRemoval(index) => {
-                    AppCommand::RemoveRecipe(index)
+                RecipePageMessage::CommitRecipeRemoval(id) => {
+                    AppCommand::RemoveRecipe(id)
                 }
-                RecipePageMessage::CommitRecipeUpdate(index, recipe) => {
-                    AppCommand::UpdateRecipe(index, recipe)
+                RecipePageMessage::CommitRecipeUpdate(id, recipe) => {
+                    AppCommand::UpdateRecipe(id, recipe)
                 }
                 RecipePageMessage::CommitPortion(portion) => {
                     AppCommand::AddPortion(portion)
@@ -226,7 +230,7 @@ impl SimpleComponent for AppModel {
                     .unwrap_or_default();
                 self.food_page.emit(
                     FoodPageCommand::LoadFoodlist(
-                        self.data.foodlist.clone().into_values().collect()
+                        self.data.cuisine.food_list()
                     )
                 );
             }
@@ -238,41 +242,39 @@ impl SimpleComponent for AppModel {
                 let id = Uuid::new_v4();
                 let food = Food { id, ..food };
                 // self.data.foodlist.push(food);
-                self.data.foodlist.insert(id, food);
+                self.data.cuisine.insert_food(id, food);
             }
             AppCommand::RemoveFood(id) => {
                 // dbg!(index);
-                self.data.foodlist.remove(&id);
+                // self.data.foodlist.remove(&id);
+                self.data.cuisine.remove_food(&id);
             }
             AppCommand::UpdateFood(id, food) => {
                 // self.data.foodlist.remove(index);
-                self.data.foodlist.insert(id, food);
+                self.data.cuisine.insert_food(id, food);
             }
             AppCommand::AddRecipe(recipe) => {
-                let recipe = Recipe {
-                    id: uuid::Uuid::new_v4(),
-                    ..recipe  
-                };
-                self.data.recipelist.push(recipe);
+                // self.data.recipelist.push(recipe);
+                let id = Uuid::new_v4();
+                let recipe = Recipe { id, ..recipe };
+                self.data.cuisine.insert_recipe(id, recipe);
             }
-            AppCommand::RemoveRecipe(index) => {
-                self.data.recipelist.remove(index);
+            AppCommand::RemoveRecipe(id) => {
+                self.data.cuisine.remove_food(&id);
             }
-            AppCommand::UpdateRecipe(index, recipe) => {
-                self.data.recipelist.insert(index, recipe);
+            AppCommand::UpdateRecipe(id, recipe) => {
+                self.data.cuisine.insert_recipe(id, recipe);
             }
             AppCommand::AddPortion(portion) => {
-                let portion = Portion {
-                    id: uuid::Uuid::new_v4(),
-                    ..portion
-                };
-                self.data.portionlist.push(portion);
+                let id = Uuid::new_v4();
+                let portion = Portion { id , ..portion };
+                self.data.cuisine.insert_portion(id, portion);
             }
-            AppCommand::RemovePortion(index) => {
-                self.data.portionlist.remove(index);
+            AppCommand::RemovePortion(id) => {
+                self.data.cuisine.remove_recipe(&id);
             }
-            AppCommand::UpdatePortion(index, portion) => {
-                self.data.portionlist.insert(index, portion);
+            AppCommand::UpdatePortion(id, portion) => {
+                self.data.cuisine.insert_portion(id, portion);
             }
             AppCommand::NoCommand => {}
         }

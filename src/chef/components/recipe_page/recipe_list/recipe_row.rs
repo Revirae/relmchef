@@ -1,19 +1,15 @@
 // #![allow(deprecated)]
 use relm4::{factory::{DynamicIndex, FactoryComponent}, gtk};
-use libadwaita::{builders::ComboRowBuilder, ComboRow, PreferencesRow};
+use libadwaita::{ComboRow};
 use libadwaita::prelude::{PreferencesRowExt, ComboRowExt};
-use relm4::{RelmWidgetExt,RelmContainerExt,RelmSetChildExt};
 use relm4::adw::prelude::{
     // PreferencesRowExt,
     ActionRowExt,
     ComboBoxExt,
     ListBoxRowExt,
-    BoxExt,
 };
 use gtk::prelude::{
-    ButtonExt, ToggleButtonExt,
-    WidgetExt, OrientableExt,
-    EditableExt,
+    WidgetExt,
 };
 
 use crate::chef::models;

@@ -1,14 +1,11 @@
 pub mod portion_row;
 
 use relm4::ComponentSender;
-use relm4::{adw, gtk};
+use relm4::{gtk};
 use relm4::factory::{DynamicIndex, FactoryVecDeque};
 use gtk::prelude::{
-    ButtonExt, ToggleButtonExt,
     WidgetExt, OrientableExt,
-    EditableExt,
 };
-use adw::prelude::PreferencesRowExt;
 
 use relm4::{ComponentParts, SimpleComponent};
 

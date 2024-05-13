@@ -2,21 +2,16 @@ mod recipe_row;
 // mod portion_row;
 
 use relm4::ComponentSender;
-use relm4::{adw, gtk};
+use relm4::{gtk};
 use relm4::factory::{DynamicIndex, FactoryVecDeque};
 use gtk::prelude::{
-    ButtonExt, ToggleButtonExt,
     WidgetExt, OrientableExt,
-    EditableExt,
 };
-use adw::prelude::PreferencesRowExt;
 
 use relm4::{ComponentParts, SimpleComponent};
 
-use crate::chef::components::recipe_page::portion_list::PortionListCommand;
 use crate::chef::components::recipe_page::recipe_list::recipe_row::RecipeRowMessage;
-use crate::chef::components::recipe_page::portion_list::portion_row::{PortionRow, PortionRowMessage};
-use crate::chef::models::{Portion, Recipe};
+use crate::chef::models::{Recipe};
 
 use self::recipe_row::RecipeRow;
 

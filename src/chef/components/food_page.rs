@@ -150,7 +150,7 @@ impl SimpleComponent for FoodPageModel  {
 
                         self.food_form.emit(
                             FoodFormCommand::ChangeIcon("document-new".into())
-                        ); //todo make them a CMD
+                        );
                     }
                     FoodPageMode::Inserting => {
                         self.state.foodlist.push(food.clone());
@@ -165,15 +165,12 @@ impl SimpleComponent for FoodPageModel  {
                 }
             }
             FoodPageCommand::Remove(index) => {
-                // dbg!(index);
                 self.state.foodlist.remove(index);
                 sender.output(
                     FoodPageMessage::CommitFoodRemoval(index)
                 );
             }
             FoodPageCommand::Update(index) => {
-                // let food = self.state.foodlist.remove(index);
-                // dbg!(self.state.foodlist.clone());
                 let food = self.state.foodlist.get(index).unwrap();
                 self.food_form.emit(
                     FoodFormCommand::Receive(food.clone())
@@ -181,7 +178,7 @@ impl SimpleComponent for FoodPageModel  {
                 self.state.mode = FoodPageMode::Editing(index);
                 self.food_form.emit(
                     FoodFormCommand::ChangeIcon("document-save".into())
-                );//todo make them a CMD
+                );
             }
         }
     }

@@ -1,4 +1,4 @@
-mod food_row;
+mod recipe_row;
 
 use relm4::ComponentSender;
 use relm4::{adw, gtk};
@@ -12,33 +12,34 @@ use adw::prelude::PreferencesRowExt;
 
 use relm4::{ComponentParts, SimpleComponent};
 
-use food_row::FoodRow;
+use crate::chef::components::recipe_page::recipe_list::recipe_row::RecipeRowMessage;
+use crate::chef::models::Recipe;
 
-use self::food_row::{FoodRowCommand, FoodRowMessage};
-use crate::chef::models::Food;
+use self::recipe_row::RecipeRow;
+
 
 #[derive(Default, Debug)]
-pub struct FoodListState {}
+pub struct RecipeListState {}
 
 #[derive(Debug)]
-pub struct FoodListModel {
-    state: FoodListState,
-    foodlist: FactoryVecDeque<FoodRow>,
+pub struct RecipeListModel {
+    state: RecipeListState,
+    recipelist: FactoryVecDeque<RecipeRow>,
 }
 
 
 #[derive(Default, Debug)]
-pub enum FoodListCommand {
+pub enum RecipeListCommand {
     #[default]
     NoCommand,
-    AddEntry(Food),
-    InsertEntry(usize, Food),
+    AddEntry(Recipe),
+    InsertEntry(usize, Recipe),
     DeleteEntry(DynamicIndex),
     UpdateEntry(DynamicIndex)
 }
 
 #[derive(Default, Debug)]
-pub enum FoodListMessage {
+pub enum RecipeListMessage {
     #[default]
     NoMessage,
     RequestRemoval(usize),
@@ -47,10 +48,10 @@ pub enum FoodListMessage {
 
 
 #[relm4::component(pub)]
-impl SimpleComponent for FoodListModel {
-    type Init = FoodListState;
-    type Input = FoodListCommand;
-    type Output = FoodListMessage;
+impl SimpleComponent for RecipeListModel {
+    type Init = RecipeListState;
+    type Input = RecipeListCommand;
+    type Output = RecipeListMessage;
     view! {
         #[root]
         gtk::Box {
@@ -60,7 +61,7 @@ impl SimpleComponent for FoodListModel {
                 set_min_content_height: 360,
 
                 #[local_ref]
-                food_listbox -> gtk::ListBox {
+                recipe_listbox -> gtk::ListBox {
                     connect_row_activated => |_, row| {}
                     // set_selection_mode: gtk::SelectionMode::None,
                     // set_activate_on_single_click: false,
@@ -78,23 +79,23 @@ impl SimpleComponent for FoodListModel {
             root: Self::Root,
             sender: ComponentSender<Self>,
         ) -> ComponentParts<Self> {
-        let foodlist = FactoryVecDeque::builder()
+        let recipelist = FactoryVecDeque::builder()
             .launch_default()
             .forward(sender.input_sender(), |message| match message {
-                FoodRowMessage::NoMessage =>
-                    FoodListCommand::NoCommand,
-                FoodRowMessage::DeleteMe(index) =>
-                    FoodListCommand::DeleteEntry(index), //DeleteEntry
-                FoodRowMessage::UpdateMe(index) =>
-                    FoodListCommand::UpdateEntry(index),
+                RecipeRowMessage::NoMessage =>
+                    RecipeListCommand::NoCommand,
+                RecipeRowMessage::DeleteMe(index) =>
+                    RecipeListCommand::DeleteEntry(index), //DeleteEntry
+                RecipeRowMessage::UpdateMe(index) =>
+                    RecipeListCommand::UpdateEntry(index),
             });
-        let model = FoodListModel {
+        let model = RecipeListModel {
             state: init,
-            foodlist
+            recipelist
         };
-        let food_listbox = model.foodlist.widget();
+        let recipe_listbox = model.recipelist.widget();
         
-        // food_listbox.set_selection_mode(gtk::SelectionMode::None);
+        // recipe_listbox.set_selection_mode(gtk::SelectionMode::None);
         let widgets = view_output!();
 
         ComponentParts { model, widgets }
@@ -102,23 +103,23 @@ impl SimpleComponent for FoodListModel {
 
     fn update(&mut self, message: Self::Input, sender: ComponentSender<Self>) {
         match message {
-            FoodListCommand::NoCommand => {}
-            FoodListCommand::AddEntry(food) => {
-                self.foodlist.guard().push_back(food);
+            RecipeListCommand::NoCommand => {}
+            RecipeListCommand::AddEntry(recipe) => {
+                self.recipelist.guard().push_back(recipe);
             }
-            FoodListCommand::InsertEntry(index, food) => {
-                self.foodlist.guard().remove(index);
-                self.foodlist.guard().insert(index, food);
+            RecipeListCommand::InsertEntry(index, recipe) => {
+                self.recipelist.guard().remove(index);
+                self.recipelist.guard().insert(index, recipe);
             }
-            FoodListCommand::DeleteEntry(index) => {
+            RecipeListCommand::DeleteEntry(index) => {
                 let i = index.current_index();
-                self.foodlist.guard().remove(i);
-                sender.output(FoodListMessage::RequestRemoval(i));
+                self.recipelist.guard().remove(i);
+                sender.output(RecipeListMessage::RequestRemoval(i));
             }
-            FoodListCommand::UpdateEntry(index) => {
+            RecipeListCommand::UpdateEntry(index) => {
                 let i = index.current_index();
-                // self.foodlist.guard().remove(i);
-                sender.output(FoodListMessage::RequestUpdate(i));
+                // self.recipelist.guard().remove(i);
+                sender.output(RecipeListMessage::RequestUpdate(i));
             }
         }
     }

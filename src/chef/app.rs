@@ -2,6 +2,7 @@
 use std::fs::File;
 use std::io::{BufReader, BufWriter};
 
+use crate::chef::components::recipe_page::{RecipePageMessage, RecipePageState};
 use crate::chef::components::{
     header,
     food_page
@@ -28,7 +29,8 @@ use serde::{Deserialize, Serialize};
 
 use super::components::food_page::{FoodPageCommand, FoodPageMessage, FoodPageModel, FoodPageState};
 use super::components::header::HeaderModel;
-use super::models::Food;
+use super::components::recipe_page::RecipePageModel;
+use super::models::{Food, Recipe};
 
 #[derive(Default, Debug)]
 pub enum AppMode {
@@ -85,6 +87,9 @@ pub enum AppCommand {
     AddFood(Food),
     RemoveFood(usize),
     UpdateFood(usize, Food),
+    AddRecipe(Recipe),
+    RemoveRecipe(usize),
+    UpdateRecipe(usize, Recipe),
     // SendToForm(Food),
 }
 
@@ -97,6 +102,7 @@ pub struct AppModel {
     data: AppData,
     header: Controller<HeaderModel>,
     food_page: Controller<FoodPageModel>,
+    recipe_page: Controller<RecipePageModel>,
 }
 
 #[relm4::component(pub)]
@@ -124,8 +130,9 @@ impl SimpleComponent for AppModel {
                 } -> {
                     set_name: "food_page"
                 },
-                add_child = &gtk::Label {
-                    set_label: "dafuq"
+                add_child = &gtk::Box {
+                    set_orientation: gtk::Orientation::Vertical,
+                    model.recipe_page.widget(),
                 } -> {
                     set_name: "recipe_page",
                 },
@@ -163,11 +170,30 @@ impl SimpleComponent for AppModel {
                     AppCommand::UpdateFood(index, food)
                 }
             });
+        let recipe_page = RecipePageModel::builder()
+            .launch(RecipePageState::default())
+            .forward(sender.input_sender(), |msg| match msg {
+                RecipePageMessage::NoMessage => {
+                    AppCommand::NoCommand
+                }               
+                RecipePageMessage::CommitRecipe(recipe) => {
+                    AppCommand::AddRecipe(recipe)
+                }
+                RecipePageMessage::CommitRecipeRemoval(index) => {
+                    AppCommand::RemoveRecipe(index)
+                }
+                RecipePageMessage::CommitRecipeUpdate(index, recipe) => {
+                    AppCommand::UpdateRecipe(index, recipe)
+                }
+            });
         
         let data = AppData::default();        
         sender.input(AppCommand::LoadDatabase);
 
-        let model = AppModel { state: init, data, header, food_page };
+        let model = AppModel {
+            state: init, data,
+            header, food_page, recipe_page
+        };
         let widgets = view_output!();
 
         ComponentParts { model, widgets }
@@ -212,6 +238,9 @@ impl SimpleComponent for AppModel {
                 // self.data.foodlist.remove(index);
                 self.data.foodlist.insert(index, food);
             }
+            AppCommand::AddRecipe(_) |
+            AppCommand::RemoveRecipe(_) |
+            AppCommand::UpdateRecipe(_, _) => {todo!("")}
             AppCommand::NoCommand => {}
         }
     }

@@ -1,14 +1,9 @@
 // #![allow(deprecated)]
 use relm4::{factory::{DynamicIndex, FactoryComponent}, gtk};
-use libadwaita::{ComboRow};
+use libadwaita::ComboRow;
 use libadwaita::prelude::{PreferencesRowExt, ComboRowExt};
-use relm4::adw::prelude::{
-    ActionRowExt,
-    ListBoxRowExt,
-};
-use gtk::prelude::{
-    WidgetExt,
-};
+use relm4::adw::prelude::ActionRowExt;
+use gtk::prelude::WidgetExt;
 
 use crate::chef::models;
 

@@ -1,20 +1,15 @@
-#![allow(unused)]
+// #![allow(unused)]
+use std::collections::HashMap;
 use std::fs::File;
 use std::io::{BufReader, BufWriter};
+use uuid::Uuid;
 
 use crate::chef::components::recipe_page::{RecipePageMessage, RecipePageState};
-use crate::chef::components::{
-    header,
-    food_page
-};
-use crate::chef::models;
+use crate::chef::components::header;
 
-use relm4::prelude::*;
-use relm4::gtk::glib::{FileError, SpawnWithinJoinHandle};
-use relm4::{adw, gtk};
+use relm4::gtk;
 use gtk::prelude::{
-    GtkWindowExt, OrientableExt,
-    WidgetExt, ApplicationExt
+    GtkWindowExt, OrientableExt, ApplicationExt
 };
 use relm4::{
     SimpleComponent,
@@ -24,13 +19,12 @@ use relm4::{
     Controller,
     ComponentController
 };
-use relm4::RelmWidgetExt;
 use serde::{Deserialize, Serialize};
 
 use super::components::food_page::{FoodPageCommand, FoodPageMessage, FoodPageModel, FoodPageState};
 use super::components::header::HeaderModel;
 use super::components::recipe_page::RecipePageModel;
-use super::models::{Food, Recipe};
+use super::models::{Food, Portion, Recipe};
 
 #[derive(Default, Debug)]
 pub enum AppMode {
@@ -56,7 +50,10 @@ impl AppState {
 
 #[derive(Default, Debug, Serialize, Deserialize)]
 pub struct AppData {
-    foodlist: Vec<Food>,
+    // foodlist: Vec<Food>,
+    foodlist: HashMap<Uuid, Food>,
+    recipelist: Vec<Recipe>,
+    portionlist: Vec<Portion>,
 }
 
 impl AppData {
@@ -85,11 +82,14 @@ pub enum AppCommand {
     PersistDatabase,
     SetMode(AppMode),
     AddFood(Food),
-    RemoveFood(usize),
-    UpdateFood(usize, Food),
+    RemoveFood(Uuid),
+    UpdateFood(Uuid, Food),
     AddRecipe(Recipe),
     RemoveRecipe(usize),
     UpdateRecipe(usize, Recipe),
+    AddPortion(Portion),
+    RemovePortion(usize),
+    UpdatePortion(usize, Portion),
     // SendToForm(Food),
 }
 
@@ -185,6 +185,15 @@ impl SimpleComponent for AppModel {
                 RecipePageMessage::CommitRecipeUpdate(index, recipe) => {
                     AppCommand::UpdateRecipe(index, recipe)
                 }
+                RecipePageMessage::CommitPortion(portion) => {
+                    AppCommand::AddPortion(portion)
+                }
+                RecipePageMessage::CommitPortionRemoval(index) => {
+                    AppCommand::RemovePortion(index)
+                }
+                RecipePageMessage::CommitPortionUpdate(index, portion) => {
+                    AppCommand::UpdatePortion(index, portion)
+                }
             });
         
         let data = AppData::default();        
@@ -216,7 +225,9 @@ impl SimpleComponent for AppModel {
                 self.data = AppData::from_file(self.state.database_path.clone())
                     .unwrap_or_default();
                 self.food_page.emit(
-                    FoodPageCommand::LoadFoodlist(self.data.foodlist.clone())
+                    FoodPageCommand::LoadFoodlist(
+                        self.data.foodlist.clone().into_values().collect()
+                    )
                 );
             }
             AppCommand::PersistDatabase => {
@@ -224,23 +235,45 @@ impl SimpleComponent for AppModel {
                     .expect("failed saving database");
             }
             AppCommand::AddFood(food) => {
-                let food = Food{
-                    id: uuid::Uuid::new_v4(),
-                    ..food
-                };
-                self.data.foodlist.push(food);
+                let id = Uuid::new_v4();
+                let food = Food { id, ..food };
+                // self.data.foodlist.push(food);
+                self.data.foodlist.insert(id, food);
             }
-            AppCommand::RemoveFood(index) => {
-                dbg!(index);
-                self.data.foodlist.remove(index);
+            AppCommand::RemoveFood(id) => {
+                // dbg!(index);
+                self.data.foodlist.remove(&id);
             }
-            AppCommand::UpdateFood(index, food) => {
+            AppCommand::UpdateFood(id, food) => {
                 // self.data.foodlist.remove(index);
-                self.data.foodlist.insert(index, food);
+                self.data.foodlist.insert(id, food);
             }
-            AppCommand::AddRecipe(_) |
-            AppCommand::RemoveRecipe(_) |
-            AppCommand::UpdateRecipe(_, _) => {todo!("")}
+            AppCommand::AddRecipe(recipe) => {
+                let recipe = Recipe {
+                    id: uuid::Uuid::new_v4(),
+                    ..recipe  
+                };
+                self.data.recipelist.push(recipe);
+            }
+            AppCommand::RemoveRecipe(index) => {
+                self.data.recipelist.remove(index);
+            }
+            AppCommand::UpdateRecipe(index, recipe) => {
+                self.data.recipelist.insert(index, recipe);
+            }
+            AppCommand::AddPortion(portion) => {
+                let portion = Portion {
+                    id: uuid::Uuid::new_v4(),
+                    ..portion
+                };
+                self.data.portionlist.push(portion);
+            }
+            AppCommand::RemovePortion(index) => {
+                self.data.portionlist.remove(index);
+            }
+            AppCommand::UpdatePortion(index, portion) => {
+                self.data.portionlist.insert(index, portion);
+            }
             AppCommand::NoCommand => {}
         }
     }

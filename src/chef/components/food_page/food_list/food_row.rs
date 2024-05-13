@@ -1,26 +1,11 @@
-#![allow(deprecated)]
-use libadwaita::{builders::ComboRowBuilder, ComboRow, PreferencesRow};
-// use relm4::gtk::traits::BoxExt;
-use relm4::{factory::DynamicIndex, Component};
-use relm4::{gtk, ComponentController};
+use libadwaita::ComboRow;
+use relm4::factory::DynamicIndex;
+use relm4::gtk;
 use relm4::prelude::FactoryComponent;
-use gtk::prelude::{
-    ButtonExt, ToggleButtonExt,
-    WidgetExt, OrientableExt,
-    EditableExt,
-};
+use gtk::prelude::WidgetExt;
 use libadwaita::prelude::{PreferencesRowExt, ComboRowExt};
-use relm4::{RelmWidgetExt,RelmContainerExt,RelmSetChildExt};
-use relm4::adw::prelude::{
-    // PreferencesRowExt,
-    ActionRowExt,
-    ComboBoxExt,
-    ListBoxRowExt,
-    BoxExt,
-};
-use relm4_components::simple_adw_combo_row::SimpleComboRow;
+use relm4::adw::prelude::ActionRowExt;
 
-use crate::chef::app::AppMessage;
 use crate::chef::models;
 
 
@@ -81,7 +66,7 @@ impl FactoryComponent for FoodRow {
             &mut self,
             index: &Self::Index,
             root: Self::Root,
-            returned_widget: &<Self::ParentWidget as relm4::factory::FactoryView>::ReturnedWidget,
+            _returned_widget: &<Self::ParentWidget as relm4::factory::FactoryView>::ReturnedWidget,
             sender: relm4::prelude::FactorySender<Self>,
         ) -> Self::Widgets {
             // root.set_model()
@@ -96,7 +81,7 @@ impl FactoryComponent for FoodRow {
             let widgets = view_output!();     
             widgets
     }
-    fn init_model(food: Self::Init, index: &Self::Index, sender: relm4::prelude::FactorySender<Self>) -> Self {
+    fn init_model(food: Self::Init, index: &Self::Index, _sender: relm4::prelude::FactorySender<Self>) -> Self {
         Self {
             index: index.clone().into(),
             title: food.name,
@@ -113,7 +98,8 @@ impl FactoryComponent for FoodRow {
                     1 => FoodRowMessage::UpdateMe(index),
                     _ => FoodRowMessage::NoMessage,
                 };
-                sender.output(message);
+                sender.output(message)
+                    .expect("failed to output food row message while processing Action above");
             }
             FoodRowCommand::NoCommand => {}
         }

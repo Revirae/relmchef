@@ -1,20 +1,15 @@
 mod food_row;
 
 use relm4::ComponentSender;
-use relm4::{adw, gtk};
+use relm4::gtk;
 use relm4::factory::{DynamicIndex, FactoryVecDeque};
 use gtk::prelude::{
-    ButtonExt, ToggleButtonExt,
     WidgetExt, OrientableExt,
-    EditableExt,
 };
-use adw::prelude::PreferencesRowExt;
 
 use relm4::{ComponentParts, SimpleComponent};
 
-use food_row::FoodRow;
-
-use self::food_row::{FoodRowCommand, FoodRowMessage};
+use food_row::{FoodRow, FoodRowMessage};
 use crate::chef::models::Food;
 
 #[derive(Default, Debug)]
@@ -22,6 +17,7 @@ pub struct FoodListState {}
 
 #[derive(Debug)]
 pub struct FoodListModel {
+    #[allow(dead_code)]
     state: FoodListState,
     foodlist: FactoryVecDeque<FoodRow>,
 }
@@ -61,7 +57,7 @@ impl SimpleComponent for FoodListModel {
 
                 #[local_ref]
                 food_listbox -> gtk::ListBox {
-                    connect_row_activated => |_, row| {}
+                    connect_row_activated => |_, _| {}
                     // set_selection_mode: gtk::SelectionMode::None,
                     // set_activate_on_single_click: false,
                     // set_css_classes: &[&"boxed-list"],
@@ -113,12 +109,14 @@ impl SimpleComponent for FoodListModel {
             FoodListCommand::DeleteEntry(index) => {
                 let i = index.current_index();
                 self.foodlist.guard().remove(i);
-                sender.output(FoodListMessage::RequestRemoval(i));
+                sender.output(FoodListMessage::RequestRemoval(i))
+                    .expect("failed to request food removal");
             }
             FoodListCommand::UpdateEntry(index) => {
                 let i = index.current_index();
                 // self.foodlist.guard().remove(i);
-                sender.output(FoodListMessage::RequestUpdate(i));
+                sender.output(FoodListMessage::RequestUpdate(i))
+                    .expect("failed to update food removal");
             }
         }
     }

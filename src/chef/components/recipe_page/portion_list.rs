@@ -1,7 +1,7 @@
 pub mod portion_row;
 
 use relm4::ComponentSender;
-use relm4::{gtk};
+use relm4::gtk;
 use relm4::factory::{DynamicIndex, FactoryVecDeque};
 use gtk::prelude::{
     WidgetExt, OrientableExt,
@@ -20,6 +20,7 @@ pub struct PortionListState {}
 
 #[derive(Debug)]
 pub struct PortionListModel {
+    #[allow(dead_code)]
     state: PortionListState,
     portionlist: FactoryVecDeque<PortionRow>,
 }
@@ -59,7 +60,7 @@ impl SimpleComponent for PortionListModel {
 
                 #[local_ref]
                 portion_listbox -> gtk::ListBox {
-                    connect_row_activated => |_, row| {}
+                    connect_row_activated => |_, _| {}
                     // set_selection_mode: gtk::SelectionMode::None,
                     // set_activate_on_single_click: false,
                     // set_css_classes: &[&"boxed-list"],
@@ -111,12 +112,14 @@ impl SimpleComponent for PortionListModel {
             PortionListCommand::DeleteEntry(index) => {
                 let i = index.current_index();
                 self.portionlist.guard().remove(i);
-                sender.output(PortionListMessage::RequestRemoval(i));
+                sender.output(PortionListMessage::RequestRemoval(i))
+                    .expect("failed to request portion removal");
             }
             PortionListCommand::UpdateEntry(index) => {
                 let i = index.current_index();
                 // self.portionlist.guard().remove(i);
-                sender.output(PortionListMessage::RequestUpdate(i));
+                sender.output(PortionListMessage::RequestUpdate(i))
+                    .expect("failed to request portion update");
             }
         }
     }

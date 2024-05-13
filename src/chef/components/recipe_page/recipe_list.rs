@@ -2,7 +2,7 @@ mod recipe_row;
 // mod portion_row;
 
 use relm4::ComponentSender;
-use relm4::{gtk};
+use relm4::gtk;
 use relm4::factory::{DynamicIndex, FactoryVecDeque};
 use gtk::prelude::{
     WidgetExt, OrientableExt,
@@ -11,7 +11,7 @@ use gtk::prelude::{
 use relm4::{ComponentParts, SimpleComponent};
 
 use crate::chef::components::recipe_page::recipe_list::recipe_row::RecipeRowMessage;
-use crate::chef::models::{Recipe};
+use crate::chef::models::Recipe;
 
 use self::recipe_row::RecipeRow;
 
@@ -30,14 +30,10 @@ pub struct RecipeListModel {
 pub enum RecipeListCommand {
     #[default]
     NoCommand,
-    AddRecipeEntry(Recipe),
+    AddEntry(Recipe),
     InsertEntry(usize, Recipe),
     DeleteEntry(DynamicIndex),
     UpdateEntry(DynamicIndex),
-    // AddPortionEntry(Portion),
-    // InsertPortionEntry(usize, Portion),
-    // DeletePortionEntry(DynamicIndex),
-    // UpdatePortionEntry(DynamicIndex)
 }
 
 #[derive(Default, Debug)]
@@ -46,8 +42,6 @@ pub enum RecipeListMessage {
     NoMessage,
     RequestRemoval(usize),
     RequestUpdate(usize),
-    // RequestPortionRemoval(usize),
-    // RequestPortionUpdate(usize),
 }
 
 
@@ -66,7 +60,7 @@ impl SimpleComponent for RecipeListModel {
 
                 #[local_ref]
                 recipe_listbox -> gtk::ListBox {
-                    connect_row_activated => |_, row| {}
+                    connect_row_activated => |_, _| {}
                     // set_selection_mode: gtk::SelectionMode::None,
                     // set_activate_on_single_click: false,
                     // set_css_classes: &[&"boxed-list"],
@@ -108,7 +102,7 @@ impl SimpleComponent for RecipeListModel {
     fn update(&mut self, message: Self::Input, sender: ComponentSender<Self>) {
         match message {
             RecipeListCommand::NoCommand => {}
-            RecipeListCommand::AddRecipeEntry(recipe) => {
+            RecipeListCommand::AddEntry(recipe) => {
                 self.recipelist.guard().push_back(recipe);
             }
             RecipeListCommand::InsertEntry(index, recipe) => {
@@ -118,12 +112,14 @@ impl SimpleComponent for RecipeListModel {
             RecipeListCommand::DeleteEntry(index) => {
                 let i = index.current_index();
                 self.recipelist.guard().remove(i);
-                sender.output(RecipeListMessage::RequestRemoval(i));
+                sender.output(RecipeListMessage::RequestRemoval(i))
+                    .expect("failed to request recipe removal")
             }
             RecipeListCommand::UpdateEntry(index) => {
                 let i = index.current_index();
                 // self.recipelist.guard().remove(i);
-                sender.output(RecipeListMessage::RequestUpdate(i));
+                sender.output(RecipeListMessage::RequestUpdate(i))
+                    .expect("failed to request recipe update")
             }
         }
     }

@@ -1,19 +1,18 @@
 // use adw::gtk::traits::BoxExt;
 use relm4::{adw, gtk, prelude::ComponentSender};
 use gtk::prelude::{
-    ButtonExt, ToggleButtonExt,
+    ButtonExt,
     WidgetExt, OrientableExt,
     EditableExt, ListBoxRowExt,
-    ActionExt
+    // ActionExt
 };
 use adw::prelude::{
     PreferencesRowExt,
-    EntryRowExt,
-    ActionRowExt,
+    // ActionRowExt,
 };
 
-use relm4::{Component, ComponentParts, SimpleComponent};
-use relm4::{RelmContainerExt, RelmSetChildExt};
+use relm4::{Component, ComponentParts};
+// use relm4::RelmContainerExt;
 
 use crate::chef::models;
 
@@ -42,7 +41,7 @@ pub enum FoodFormCommand {
 pub enum FoodFormMessage {
     #[default]
     NoMessage,
-    Changed,
+    // Changed,
     Submit(models::Food),
 }
 
@@ -154,8 +153,7 @@ impl Component for FoodFormModel {
             root: Self::Root,
             sender: ComponentSender<Self>,
     ) -> ComponentParts<Self> {
-        let state = models::Food::default();
-        let model = FoodFormModel { state };
+        let model = FoodFormModel { state: init };
         let widgets = view_output!();
 
         ComponentParts { model, widgets }
@@ -165,8 +163,8 @@ impl Component for FoodFormModel {
             &mut self,
             widgets: &mut Self::Widgets,
             message: Self::CommandOutput,
-            sender: ComponentSender<Self>,
-            root: &Self::Root,
+            _sender: ComponentSender<Self>,
+            _root: &Self::Root,
         ) {
         match message {
             FoodFormAction::Fill => {
@@ -183,14 +181,14 @@ impl Component for FoodFormModel {
         }
     }
     
-    fn update(&mut self, message: Self::Input, sender: ComponentSender<Self>, root: &Self::Root) {
+    fn update(&mut self, message: Self::Input, sender: ComponentSender<Self>, _root: &Self::Root) {
         match message {
             FoodFormCommand::NoCommand => {}
             FoodFormCommand::Send => {
                 // todo!("validation");
                 sender.output(FoodFormMessage::Submit(
                     self.state.clone()
-                ));
+                )).expect("failed to submit form");
             }
             FoodFormCommand::Receive(food) => {
                 dbg!(food.clone());

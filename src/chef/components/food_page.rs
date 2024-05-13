@@ -1,12 +1,9 @@
-#![allow(unused)]
+// #![allow(unused)]
 mod food_form;
 mod food_list;
 
 use relm4::gtk;
-use gtk::prelude::{
-    ButtonExt, ToggleButtonExt,
-    WidgetExt, OrientableExt
-};
+use gtk::prelude::OrientableExt;
 use relm4::{
     ComponentParts,
     SimpleComponent,
@@ -14,6 +11,7 @@ use relm4::{
     ComponentController,
     Component
 };
+use uuid::Uuid;
 
 use crate::chef::models::Food;
 
@@ -28,7 +26,7 @@ use food_list::{
 };
 
 use self::{
-    food_form::{FoodFormAction, FoodFormCommand},
+    food_form::FoodFormCommand,
     food_list::FoodListCommand
 };
 
@@ -59,7 +57,7 @@ pub enum FoodPageCommand {
     #[default]
     NoCommand,
     LoadFoodlist(Vec<Food>),
-    Put(Food),
+    PutFood(Food),
     Remove(usize),
     Update(usize),
 }
@@ -69,8 +67,8 @@ pub enum FoodPageMessage {
     #[default]
     NoMessage,
     CommitFood(Food),
-    CommitFoodRemoval(usize),
-    CommitFoodUpdate(usize, Food),
+    CommitFoodRemoval(Uuid),
+    CommitFoodUpdate(Uuid, Food),
 }
 
 #[relm4::component(pub)]
@@ -97,11 +95,8 @@ impl SimpleComponent for FoodPageModel  {
                 FoodFormMessage::NoMessage => {
                     FoodPageCommand::NoCommand
                 }
-                FoodFormMessage::Changed => {
-                    FoodPageCommand::NoCommand
-                }
                 FoodFormMessage::Submit(food) => {
-                    FoodPageCommand::Put(food)    
+                    FoodPageCommand::PutFood(food)    
                 }
             });
         let food_list = FoodListModel::builder()
@@ -117,9 +112,9 @@ impl SimpleComponent for FoodPageModel  {
                     FoodPageCommand::Update(index)
                 }
             });
-        let state = FoodPageState::default();
+
         let model = FoodPageModel  {
-            state,
+            state: init,
             food_form,
             food_list
         };
@@ -137,15 +132,15 @@ impl SimpleComponent for FoodPageModel  {
                     );
                 }
             }    
-            FoodPageCommand::Put(food) => {
+            FoodPageCommand::PutFood(food) => {
                 match self.state.mode {
                     FoodPageMode::Editing(index) => {
                         self.food_list.emit(
                             FoodListCommand::InsertEntry(index, food.clone())
                         );
                         sender.output(
-                            FoodPageMessage::CommitFoodUpdate(index, food)
-                        );
+                            FoodPageMessage::CommitFoodUpdate(food.id, food)
+                        ).expect("failed to commit food update");
                         self.state.mode = FoodPageMode::Inserting;
 
                         self.food_form.emit(
@@ -159,16 +154,17 @@ impl SimpleComponent for FoodPageModel  {
                         );
                         sender.output(
                             FoodPageMessage::CommitFood(food)
-                        );
+                        ).expect("failed to commit food insertion");
                     }
-                    _ => {}
+                    // _ => {}
                 }
             }
             FoodPageCommand::Remove(index) => {
+                let id = self.state.foodlist.get(index).unwrap().id;
                 self.state.foodlist.remove(index);
                 sender.output(
-                    FoodPageMessage::CommitFoodRemoval(index)
-                );
+                    FoodPageMessage::CommitFoodRemoval(id)
+                ).expect("failed to commit food removal");
             }
             FoodPageCommand::Update(index) => {
                 let food = self.state.foodlist.get(index).unwrap();

@@ -12,6 +12,7 @@ use crate::chef::models;
 pub struct PortionRow {
     title: String,
     subtitle: String,
+    #[allow(dead_code)]
     index: DynamicIndex,
 }
 
@@ -19,6 +20,7 @@ pub struct PortionRow {
 pub enum PortionRowCommand {
     #[default]
     NoCommand,
+    #[allow(dead_code)]
     Action(u32, DynamicIndex),
 }
 
@@ -26,7 +28,9 @@ pub enum PortionRowCommand {
 pub enum PortionRowMessage {
     #[default]
     NoMessage,
+    #[allow(dead_code)]
     DeleteMe(DynamicIndex),
+    #[allow(dead_code)]
     UpdateMe(DynamicIndex),
 }
 

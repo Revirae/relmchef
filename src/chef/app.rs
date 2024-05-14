@@ -246,16 +246,20 @@ impl SimpleComponent for AppModel {
                     .unwrap_or_default();
 
                 self.food_page.emit(
-                    FoodPageCommand::LoadFoodlist(
+                    FoodPageCommand::LoadFoodList(
                         self.data.cuisine.food_list()
                     )
                 );
-                // //when switch pages?
-                // self.recipe_page.emit(
-                //     RecipePageCommand::LoadFoodIngredientList(
-                //         self.data.cuisine.food_list()
-                //     )
-                // )
+                self.recipe_page.emit(
+                    RecipePageCommand::LoadRecipeList(
+                        self.data.cuisine.recipe_list()
+                    )
+                );
+                self.recipe_page.emit(
+                    RecipePageCommand::LoadFoodPortionList(
+                        self.data.cuisine.food_portion_list()
+                    )
+                );
             }
             AppCommand::PersistDatabase => {
                 self.data.to_file(self.state.database_path.clone())

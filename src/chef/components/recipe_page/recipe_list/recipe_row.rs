@@ -11,6 +11,7 @@ use crate::chef::models;
 pub struct RecipeRow {
     title: String,
     subtitle: String,
+    #[allow(dead_code)]
     index: DynamicIndex,
 }
 

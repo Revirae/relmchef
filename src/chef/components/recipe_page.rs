@@ -23,7 +23,7 @@ use components::recipe_page::portion_list::{PortionListMessage, PortionListModel
 use components::recipe_page::recipe_form::RecipeFormMessage;
 use components::recipe_page::recipe_list::{RecipeListMessage, RecipeListState};
 
-use models::{Portion, Recipe};
+use models::Recipe;
 
 use self::portion_form::{PortionFormCommand, PortionFormModel};
 use self::recipe_form::{RecipeFormCommand, RecipeFormModel};
@@ -36,10 +36,11 @@ use self::recipe_list::{RecipeListCommand, RecipeListModel};
 pub enum RecipePageMode {
     #[default]
     InsertingRecipe,
-    InsertingPortion,
     EditingRecipe(usize),
+    #[allow(dead_code)]
+    InsertingPortion,
+    #[allow(dead_code)]
     EditingPortion(usize),
-    // Filtering,
 }
 
 #[derive(Default, Debug)]
@@ -68,7 +69,7 @@ pub enum RecipePageCommand {
     RemoveRecipe(usize),
     UpdateRecipe(usize),
 
-    LoadPortionList(Vec<models::FoodPortion>),
+    LoadFoodPortionList(Vec<models::FoodPortion>),
     PutPortion(models::FoodPortion),
     RemovePortion(usize),
     UpdatePortion(usize),
@@ -179,7 +180,7 @@ impl SimpleComponent for RecipePageModel  {
                     );
                 }
             }    
-            RecipePageCommand::LoadPortionList(portionlist) => {
+            RecipePageCommand::LoadFoodPortionList(portionlist) => {
                 self.state.portionlist = portionlist.clone();
                 for portion in portionlist {
                     self.portion_list.emit(
@@ -187,9 +188,9 @@ impl SimpleComponent for RecipePageModel  {
                     );
                 }
             }    
-            RecipePageCommand::LoadFoodIngredientList(food_list) => {
+            RecipePageCommand::LoadFoodIngredientList(foodlist) => {
                 self.portion_form.emit(
-                    PortionFormCommand::ReceiveFoodList(food_list)
+                    PortionFormCommand::ReceiveFoodList(foodlist)
                 );
             }
             RecipePageCommand::PutRecipe(recipe) => {

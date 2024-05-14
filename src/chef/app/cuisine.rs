@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::chef::models::{Food, Portion, Recipe};
+use crate::chef::models::{Food, FoodPortion, Portion, Recipe};
 
 #[derive(Debug, Default, Serialize, Deserialize)]
 pub struct Cuisine {
@@ -37,9 +37,26 @@ impl Cuisine {
     pub fn portion_list(&self) -> Vec<Portion> {
         self.portionlist.clone().into_values().collect()
     }
+    pub fn food_portion_list(&self) -> Vec<FoodPortion> {
+        self.portion_list().into_iter().map(|portion| {
+            let ingredient = self.foodlist
+                .get(&portion.ingredient_id)
+                .unwrap()
+                .clone();
+            let recipe = self.recipelist
+                .get(&portion.recipe_id)
+                .unwrap()
+                .clone();
+            FoodPortion {
+                inner: portion,
+                ingredient, recipe
+            }
+        }).collect()
+    }
     pub fn insert_portion(&mut self, id: Uuid, portion: Portion) {
         self.portionlist.insert(id, portion);
     }
+    #[allow(dead_code)]
     pub fn remove_portion(&mut self, id: &Uuid) {
         self.portionlist.remove(id);
     }

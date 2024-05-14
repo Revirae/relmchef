@@ -21,6 +21,7 @@ pub struct RecipeListState {}
 
 #[derive(Debug)]
 pub struct RecipeListModel {
+    #[allow(dead_code)]
     state: RecipeListState,
     recipelist: FactoryVecDeque<RecipeRow>,
 }

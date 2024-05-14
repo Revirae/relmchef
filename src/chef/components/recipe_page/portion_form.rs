@@ -1,10 +1,8 @@
-use relm4::{adw, gtk, prelude::ComponentSender};
+use relm4::{gtk, prelude::ComponentSender};
 use gtk::prelude::{
     ButtonExt,
     WidgetExt, OrientableExt,
-    // EditableExt,
 };
-// use adw::prelude::PreferencesRowExt;
 
 use relm4::{Component, ComponentParts};
 
@@ -55,16 +53,6 @@ impl Component for PortionFormModel {
                 #[watch]
                 set_model: Some(&model.ingredient_list),
             },
-            // adw::EntryRow {
-            //     set_title: "Nome",
-            //     set_hexpand: true,
-            //     connect_changed[sender] => move |entry| {
-            //         let name = entry.text().to_string();
-            //         sender.input(
-            //             PortionFormCommand::ChangeName(name)
-            //         )
-            //     }
-            // },
             #[name(send_button)]
             gtk::Button {
                 set_icon_name: "document-new",

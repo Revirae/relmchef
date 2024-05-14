@@ -56,7 +56,7 @@ pub struct FoodPageModel {
 pub enum FoodPageCommand {
     #[default]
     NoCommand,
-    LoadFoodlist(Vec<Food>),
+    LoadFoodList(Vec<Food>),
     PutFood(Food),
     Remove(usize),
     Update(usize),
@@ -124,7 +124,7 @@ impl SimpleComponent for FoodPageModel  {
     fn update(&mut self, message: Self::Input, sender: relm4::prelude::ComponentSender<Self>) {
         match message {
             FoodPageCommand::NoCommand => {}
-            FoodPageCommand::LoadFoodlist(foodlist) => {
+            FoodPageCommand::LoadFoodList(foodlist) => {
                 self.state.foodlist = foodlist.clone();
                 for food in foodlist {
                     self.food_list.emit(

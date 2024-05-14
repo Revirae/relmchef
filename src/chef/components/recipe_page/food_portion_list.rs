@@ -1,5 +1,5 @@
-pub mod portion_row;
-use self::portion_row::PortionRow;
+pub mod food_portion_row;
+use self::food_portion_row::FoodPortionRow;
 
 use relm4::ComponentSender;
 use relm4::gtk;
@@ -11,23 +11,23 @@ use gtk::prelude::{
 use relm4::{ComponentParts, SimpleComponent};
 
 use crate::chef::{ components, models };
-use components::recipe_page::portion_list::portion_row::PortionRowMessage;
+use components::recipe_page::food_portion_list::food_portion_row::FoodPortionRowMessage;
 use models::FoodPortion;
 
 
 #[derive(Default, Debug)]
-pub struct PortionListState {}
+pub struct FoodPortionListState {}
 
 #[derive(Debug)]
-pub struct PortionListModel {
+pub struct FoodPortionListModel {
     #[allow(dead_code)]
-    state: PortionListState,
-    portionlist: FactoryVecDeque<PortionRow>,
+    state: FoodPortionListState,
+    portionlist: FactoryVecDeque<FoodPortionRow>,
 }
 
 
 #[derive(Default, Debug)]
-pub enum PortionListCommand {
+pub enum FoodPortionListCommand {
     #[default]
     NoCommand,
     AddEntry(FoodPortion),
@@ -37,7 +37,7 @@ pub enum PortionListCommand {
 }
 
 #[derive(Default, Debug)]
-pub enum PortionListMessage {
+pub enum FoodPortionListMessage {
     #[default]
     NoMessage,
     RequestRemoval(usize),
@@ -46,10 +46,10 @@ pub enum PortionListMessage {
 
 
 #[relm4::component(pub)]
-impl SimpleComponent for PortionListModel {
-    type Init = PortionListState;
-    type Input = PortionListCommand;
-    type Output = PortionListMessage;
+impl SimpleComponent for FoodPortionListModel {
+    type Init = FoodPortionListState;
+    type Input = FoodPortionListCommand;
+    type Output = FoodPortionListMessage;
     view! {
         #[root]
         gtk::Box {
@@ -80,14 +80,14 @@ impl SimpleComponent for PortionListModel {
         let portionlist = FactoryVecDeque::builder()
             .launch_default()
             .forward(sender.input_sender(), |message| match message {
-                PortionRowMessage::NoMessage =>
-                    PortionListCommand::NoCommand,
-                PortionRowMessage::DeleteMe(index) =>
-                    PortionListCommand::DeleteEntry(index), //DeleteEntry
-                PortionRowMessage::UpdateMe(index) =>
-                    PortionListCommand::UpdateEntry(index),
+                FoodPortionRowMessage::NoMessage =>
+                    FoodPortionListCommand::NoCommand,
+                FoodPortionRowMessage::DeleteMe(index) =>
+                    FoodPortionListCommand::DeleteEntry(index), //DeleteEntry
+                FoodPortionRowMessage::UpdateMe(index) =>
+                    FoodPortionListCommand::UpdateEntry(index),
             });
-        let model = PortionListModel {
+        let model = FoodPortionListModel {
             state: init,
             portionlist
         };
@@ -101,24 +101,24 @@ impl SimpleComponent for PortionListModel {
 
     fn update(&mut self, message: Self::Input, sender: ComponentSender<Self>) {
         match message {
-            PortionListCommand::NoCommand => {}
-            PortionListCommand::AddEntry(portion) => {
+            FoodPortionListCommand::NoCommand => {}
+            FoodPortionListCommand::AddEntry(portion) => {
                 self.portionlist.guard().push_back(portion);
             }
-            PortionListCommand::InsertEntry(index, portion) => {
+            FoodPortionListCommand::InsertEntry(index, portion) => {
                 self.portionlist.guard().remove(index);
                 self.portionlist.guard().insert(index, portion);
             }
-            PortionListCommand::DeleteEntry(index) => {
+            FoodPortionListCommand::DeleteEntry(index) => {
                 let i = index.current_index();
                 self.portionlist.guard().remove(i);
-                sender.output(PortionListMessage::RequestRemoval(i))
+                sender.output(FoodPortionListMessage::RequestRemoval(i))
                     .expect("failed to request portion removal");
             }
-            PortionListCommand::UpdateEntry(index) => {
+            FoodPortionListCommand::UpdateEntry(index) => {
                 let i = index.current_index();
                 // self.portionlist.guard().remove(i);
-                sender.output(PortionListMessage::RequestUpdate(i))
+                sender.output(FoodPortionListMessage::RequestUpdate(i))
                     .expect("failed to request portion update");
             }
         }

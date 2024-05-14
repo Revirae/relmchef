@@ -41,3 +41,16 @@ pub struct FoodPortion {
     pub ingredient: Food,
     pub recipe: Recipe,
 }
+
+#[derive(Debug, Default, Clone, Serialize, Deserialize)]
+pub struct Product {
+    pub id: Uuid,
+    pub name: String,
+}
+
+#[derive(Debug, Default, Clone)]
+pub struct RecipePortion {
+    pub inner: Portion,
+    pub ingredient: Recipe,
+    pub product: Product,
+}

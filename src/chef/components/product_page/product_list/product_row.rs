@@ -2,14 +2,13 @@
 use relm4::gtk;
 use relm4::factory::{DynamicIndex, FactoryComponent};
 use libadwaita::ComboRow;
-use libadwaita::prelude::{PreferencesRowExt, ComboRowExt};
-use relm4::adw::prelude::ActionRowExt;
+use libadwaita::prelude::{PreferencesRowExt, ComboRowExt, ActionRowExt};
 use gtk::prelude::WidgetExt;
 
 use crate::chef::models;
 
 #[derive(Debug)]
-pub struct PortionRow {
+pub struct ProductRow {
     title: String,
     subtitle: String,
     #[allow(dead_code)]
@@ -17,28 +16,25 @@ pub struct PortionRow {
 }
 
 #[derive(Default, Debug)]
-pub enum PortionRowCommand {
+pub enum ProductRowCommand {
     #[default]
     NoCommand,
-    #[allow(dead_code)]
     Action(u32, DynamicIndex),
 }
 
 #[derive(Default, Debug)]
-pub enum PortionRowMessage {
+pub enum ProductRowMessage {
     #[default]
     NoMessage,
-    #[allow(dead_code)]
     DeleteMe(DynamicIndex),
-    #[allow(dead_code)]
     UpdateMe(DynamicIndex),
 }
 
 #[relm4::factory(pub)]
-impl FactoryComponent for PortionRow {
-    type Init = models::FoodPortion;
-    type Input = PortionRowCommand;
-    type Output = PortionRowMessage;
+impl FactoryComponent for ProductRow {
+    type Init = models::Product;
+    type Input = ProductRowCommand;
+    type Output = ProductRowMessage;
     type CommandOutput = ();
     type ParentWidget = gtk::ListBox;
 
@@ -58,7 +54,7 @@ impl FactoryComponent for PortionRow {
 
             // set_selected: CONFIG.game.enhancements.gamescope.window_type.ordinal() as u32,
             // connect_selected_notify[sender] => move |crow| unsafe {
-                // sender.input(PortionRowCommand::Action(crow.index(), self.index));
+                // sender.input(ProductRowCommand::Action(crow.index(), self.index));
             // }
         }
     }
@@ -72,7 +68,7 @@ impl FactoryComponent for PortionRow {
         ) -> Self::Widgets {
             let index = index.clone();
             root.connect_selected_item_notify(move |cr|
-                sender.input(PortionRowCommand::Action(
+                sender.input(ProductRowCommand::Action(
                     cr.selected(), 
                     index.clone()
                 ))
@@ -80,11 +76,27 @@ impl FactoryComponent for PortionRow {
             let widgets = view_output!();     
             widgets
     }
-    fn init_model(portion: Self::Init, index: &Self::Index, _sender: relm4::prelude::FactorySender<Self>) -> Self {
+    fn init_model(recipe: Self::Init, index: &Self::Index, _sender: relm4::prelude::FactorySender<Self>) -> Self {
         Self {
             index: index.clone().into(),
-            title: portion.ingredient.name,
-            subtitle: portion.recipe.name,
+            title: recipe.name,
+            subtitle: String::new(),
+        }
+    }
+    fn update(&mut self, message: Self::Input, sender: relm4::prelude::FactorySender<Self>) {
+        match message {
+            ProductRowCommand::Action(action, index) => {
+                dbg!(action);
+                dbg!(index.clone());
+                let message = match action {
+                    2 => ProductRowMessage::DeleteMe(index),
+                    1 => ProductRowMessage::UpdateMe(index),
+                    _ => ProductRowMessage::NoMessage,
+                };
+                sender.output(message)
+                    .expect("failed to output food row message while processing Action above");
+            }
+            ProductRowCommand::NoCommand => {}
         }
     }
 }

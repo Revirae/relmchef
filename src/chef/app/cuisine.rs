@@ -3,13 +3,14 @@ use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::chef::models::{Food, FoodPortion, Portion, Recipe};
+use crate::chef::models::{Food, FoodPortion, Portion, Product, Recipe};
 
 #[derive(Debug, Default, Serialize, Deserialize)]
 pub struct Cuisine {
     foodlist: HashMap<Uuid, Food>,
     recipelist: HashMap<Uuid, Recipe>,
     portionlist: HashMap<Uuid, Portion>,
+    productlist: HashMap<Uuid, Product>,
 }
 
 impl Cuisine {
@@ -59,6 +60,18 @@ impl Cuisine {
     #[allow(dead_code)]
     pub fn remove_portion(&mut self, id: &Uuid) {
         self.portionlist.remove(id);
+    }
+
+    #[allow(dead_code)]
+    pub fn product_list(&self) -> Vec<Product> {
+        self.productlist.clone().into_values().collect()
+    }
+    pub fn insert_product(&mut self, id: Uuid, product: Product) {
+        self.productlist.insert(id, product);
+    }
+    #[allow(dead_code)]
+    pub fn remove_product(&mut self, id: &Uuid) {
+        self.productlist.remove(id);
     }
 }
 

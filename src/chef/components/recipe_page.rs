@@ -1,8 +1,8 @@
 // #![allow(unused)]
 mod recipe_form;
 mod recipe_list;
-mod portion_form;
-mod portion_list;
+mod food_portion_form;
+mod food_portion_list;
 
 use relm4::gtk;
 use relm4::prelude::ComponentSender;
@@ -13,22 +13,27 @@ use relm4::{
     ComponentController,
     Component
 };
-use gtk::prelude::OrientableExt;
+use gtk::prelude::{WidgetExt, OrientableExt};
 use uuid::Uuid;
 
 use crate::chef::models::FoodPortion;
 use crate::chef::{components, models};
-use components::recipe_page::portion_form::PortionFormMessage;
-use components::recipe_page::portion_list::{PortionListMessage, PortionListModel, PortionListState};
+
+use components::recipe_page::food_portion_form::FoodPortionFormMessage;
+use components::recipe_page::food_portion_list::{
+    FoodPortionListMessage,
+    FoodPortionListModel,
+    FoodPortionListState
+};
 use components::recipe_page::recipe_form::RecipeFormMessage;
 use components::recipe_page::recipe_list::{RecipeListMessage, RecipeListState};
 
 use models::Recipe;
 
-use self::portion_form::{PortionFormCommand, PortionFormModel};
+use self::food_portion_form::{FoodPortionFormCommand, FoodPortionFormModel};
 use self::recipe_form::{RecipeFormCommand, RecipeFormModel};
 
-use self::portion_list::PortionListCommand;
+use self::food_portion_list::FoodPortionListCommand;
 use self::recipe_list::{RecipeListCommand, RecipeListModel};
 
 
@@ -47,7 +52,7 @@ pub enum RecipePageMode {
 pub struct RecipePageState {
     mode: RecipePageMode,
     recipelist: Vec<models::Recipe>,
-    portionlist: Vec<models::FoodPortion>,
+    foodportionlist: Vec<models::FoodPortion>,
 }
 
 #[derive(Debug)]
@@ -55,8 +60,8 @@ pub struct RecipePageModel {
     state: RecipePageState,
     recipe_form: Controller<RecipeFormModel>,
     recipe_list: Controller<RecipeListModel>,
-    portion_form: Controller<PortionFormModel>,
-    portion_list: Controller<PortionListModel>,
+    food_portion_form: Controller<FoodPortionFormModel>,
+    food_portion_list: Controller<FoodPortionListModel>,
 }
 
 #[derive(Default, Debug)]
@@ -100,10 +105,20 @@ impl SimpleComponent for RecipePageModel  {
         #[root]
         gtk::Box {
             set_orientation: gtk::Orientation::Vertical,
-            model.recipe_form.widget(),           
-            model.recipe_list.widget(),
-            model.portion_form.widget(),
-            model.portion_list.widget(),
+            gtk::Box {
+                set_orientation: gtk::Orientation::Horizontal,
+                gtk::Box {
+                    set_orientation: gtk::Orientation::Vertical,
+                    model.recipe_form.widget(),           
+                    model.recipe_list.widget(),
+                },
+                gtk::Box {
+                    set_orientation: gtk::Orientation::Vertical,
+                    set_hexpand: true,
+                    model.food_portion_form.widget(),
+                    model.food_portion_list.widget(),
+                }
+            }
         }
     }
     fn init(
@@ -121,13 +136,13 @@ impl SimpleComponent for RecipePageModel  {
                     RecipePageCommand::PutRecipe(recipe)    
                 }
             });
-        let portion_form = PortionFormModel::builder()
+        let food_portion_form = FoodPortionFormModel::builder()
             .launch(FoodPortion::default())
             .forward(sender.input_sender(), |msg| match msg {
-                PortionFormMessage::NoMessage => {
+                FoodPortionFormMessage::NoMessage => {
                     RecipePageCommand::NoCommand
                 }
-                PortionFormMessage::Submit(portion) => {
+                FoodPortionFormMessage::Submit(portion) => {
                     RecipePageCommand::PutPortion(portion)
                 }
             });
@@ -145,16 +160,16 @@ impl SimpleComponent for RecipePageModel  {
                     RecipePageCommand::UpdateRecipe(index)
                 }
             });
-        let portion_list = PortionListModel::builder()
-            .launch(PortionListState::default())
+        let food_portion_list = FoodPortionListModel::builder()
+            .launch(FoodPortionListState::default())
             .forward(sender.input_sender(), |msg| match msg {
-                PortionListMessage::NoMessage => {
+                FoodPortionListMessage::NoMessage => {
                     RecipePageCommand::NoCommand
                 }
-                PortionListMessage::RequestRemoval(index) => {
+                FoodPortionListMessage::RequestRemoval(index) => {
                     RecipePageCommand::RemovePortion(index)
                 }
-                PortionListMessage::RequestUpdate(index) => {
+                FoodPortionListMessage::RequestUpdate(index) => {
                     RecipePageCommand::UpdatePortion(index)
                 }
             });
@@ -162,9 +177,9 @@ impl SimpleComponent for RecipePageModel  {
         let model = RecipePageModel  {
             state: init,
             recipe_form,
-            portion_form,
+            food_portion_form,
             recipe_list,
-            portion_list
+            food_portion_list
         };
         let widgets = view_output!();
         ComponentParts { model, widgets }
@@ -181,16 +196,16 @@ impl SimpleComponent for RecipePageModel  {
                 }
             }    
             RecipePageCommand::LoadFoodPortionList(portionlist) => {
-                self.state.portionlist = portionlist.clone();
+                self.state.foodportionlist = portionlist.clone();
                 for portion in portionlist {
-                    self.portion_list.emit(
-                        PortionListCommand::AddEntry(portion)
+                    self.food_portion_list.emit(
+                        FoodPortionListCommand::AddEntry(portion)
                     );
                 }
             }    
             RecipePageCommand::LoadFoodIngredientList(foodlist) => {
-                self.portion_form.emit(
-                    PortionFormCommand::ReceiveFoodList(foodlist)
+                self.food_portion_form.emit(
+                    FoodPortionFormCommand::ReceiveFoodList(foodlist)
                 );
             }
             RecipePageCommand::PutRecipe(recipe) => {
@@ -240,8 +255,8 @@ impl SimpleComponent for RecipePageModel  {
             RecipePageCommand::PutPortion(portion) => {
                 match self.state.mode {
                     RecipePageMode::EditingPortion(index) => {
-                        self.portion_list.emit(
-                            PortionListCommand::InsertEntry(index, portion.clone())
+                        self.food_portion_list.emit(
+                            FoodPortionListCommand::InsertEntry(index, portion.clone())
                         );
                         sender.output(
                             RecipePageMessage::CommitPortionUpdate(portion.inner.id, portion)
@@ -253,9 +268,9 @@ impl SimpleComponent for RecipePageModel  {
                         // );
                     }
                     RecipePageMode::InsertingPortion => {
-                        self.state.portionlist.push(portion.clone());
-                        self.portion_list.emit(
-                            PortionListCommand::AddEntry(portion.clone())
+                        self.state.foodportionlist.push(portion.clone());
+                        self.food_portion_list.emit(
+                            FoodPortionListCommand::AddEntry(portion.clone())
                         );
                         sender.output(
                             RecipePageMessage::CommitPortion(portion)
@@ -272,9 +287,9 @@ impl SimpleComponent for RecipePageModel  {
                 ).expect("failed to commit portion removal");
             }
             RecipePageCommand::UpdatePortion(index) => {
-                let portion= self.state.portionlist.get(index).unwrap();
-                self.portion_form.emit(
-                    PortionFormCommand::Receive(portion.clone())
+                let portion= self.state.foodportionlist.get(index).unwrap();
+                self.food_portion_form.emit(
+                    FoodPortionFormCommand::Receive(portion.clone())
                 );
                 self.state.mode = RecipePageMode::EditingRecipe(index);
                 // self.recipe_form.emit(

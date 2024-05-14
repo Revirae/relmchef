@@ -1,5 +1,4 @@
 mod recipe_row;
-// mod portion_row;
 
 use relm4::ComponentSender;
 use relm4::gtk;

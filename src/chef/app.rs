@@ -6,6 +6,7 @@ use std::fs::File;
 use std::io::{BufReader, BufWriter};
 use uuid::Uuid;
 
+use crate::chef::components::product_page::{ProductPageMessage, ProductPageState};
 use crate::chef::components::recipe_page::{RecipePageMessage, RecipePageState};
 use crate::chef::components::header;
 
@@ -24,17 +25,29 @@ use relm4::{
 use serde::{Deserialize, Serialize};
 
 use self::cuisine::Cuisine;
+use super::components;
+use super::components::product_page::ProductPageCommand;
 
-use super::components::food_page::{FoodPageCommand, FoodPageMessage, FoodPageModel, FoodPageState};
-use super::components::header::HeaderModel;
-use super::components::recipe_page::{RecipePageCommand, RecipePageModel};
-use super::models::{Food, Portion, Recipe};
+use components::header::HeaderModel;
+use components::food_page::{
+    FoodPageCommand, FoodPageMessage,
+    FoodPageModel, FoodPageState
+};
+use components::recipe_page::{
+    RecipePageCommand,
+    RecipePageModel
+};
+
+use components::product_page::ProductPageModel;
+
+use super::models::{Food, Portion, Product, Recipe};
 
 #[derive(Default, Debug)]
 pub enum AppMode {
     #[default]
     FoodInventory,
     Recipes,
+    Products,
 }
 
 #[derive(Default)]
@@ -91,6 +104,9 @@ pub enum AppCommand {
     AddPortion(Portion),
     RemovePortion(Uuid),
     UpdatePortion(Uuid, Portion),
+    AddProduct(Product),
+    RemoveProduct(Uuid),
+    UpdateProduct(Uuid, Product),
 }
 
 #[derive(Debug)]
@@ -103,6 +119,7 @@ pub struct AppModel {
     header: Controller<HeaderModel>,
     food_page: Controller<FoodPageModel>,
     recipe_page: Controller<RecipePageModel>,
+    product_page: Controller<ProductPageModel>,
 }
 
 #[relm4::component(pub)]
@@ -124,18 +141,6 @@ impl SimpleComponent for AppModel {
             gtk::Stack {
                 #[watch]
                 set_visible_child_name: model.state.page.as_ref(),
-                // connect_visible_child_notify[sender] => move |stack| {
-                //     if let Some(page_name) = stack.visible_child_name() {
-                //         println!("{}", page_name);
-                //         match String::from(page_name).as_ref() {
-                //             "food_page" => {},
-                //             "recipe_page" => {
-                //                 sender.input(AppCommand::)
-                //             },
-                //             _ => {}
-                //         }
-                //     }
-                // },
                 add_child = &gtk::Box {
                     set_orientation: gtk::Orientation::Vertical,
                     model.food_page.widget(),
@@ -147,6 +152,12 @@ impl SimpleComponent for AppModel {
                     model.recipe_page.widget(),
                 } -> {
                     set_name: "recipe_page",
+                },
+                add_child = &gtk::Box {
+                    set_orientation: gtk::Orientation::Vertical,
+                    model.product_page.widget(),
+                } -> {
+                    set_name: "product_page",
                 },
             }
         }
@@ -164,7 +175,9 @@ impl SimpleComponent for AppModel {
                 header::Tab::Food => 
                     AppCommand::SetMode(AppMode::FoodInventory),
                 header::Tab::Recipe =>
-                    AppCommand::SetMode(AppMode::Recipes)
+                    AppCommand::SetMode(AppMode::Recipes),
+                header::Tab::Product =>
+                    AppCommand::SetMode(AppMode::Products),
             });
         let food_page = FoodPageModel::builder()
             .launch(FoodPageState::default())
@@ -207,13 +220,39 @@ impl SimpleComponent for AppModel {
                     AppCommand::UpdatePortion(index, portion.inner)
                 }
             });
+
+        let product_page = ProductPageModel::builder()
+            .launch(ProductPageState::default())
+            .forward(sender.input_sender(), |msg| match msg {
+                ProductPageMessage::NoMessage => {
+                    AppCommand::NoCommand
+                }
+                ProductPageMessage::CommitProduct(product) => {
+                    AppCommand::AddProduct(product)
+                }
+                ProductPageMessage::CommitProductRemoval(id) => {
+                    AppCommand::RemoveProduct(id)
+                }
+                ProductPageMessage::CommitProductUpdate(id, product) => {
+                    AppCommand::UpdateProduct(id, product)
+                }
+                ProductPageMessage::CommitRecipePortion(portion) => {
+                    AppCommand::AddPortion(portion.inner)
+                }
+                ProductPageMessage::CommitRecipePortionRemoval(index) => {
+                    AppCommand::RemovePortion(index)
+                }
+                ProductPageMessage::CommitRecipePortionUpdate(index, portion) => {
+                    AppCommand::UpdatePortion(index, portion.inner)
+                }
+            });
         
         let data = AppData::default();        
         sender.input(AppCommand::LoadDatabase);
 
         let model = AppModel {
             state: init, data,
-            header, food_page, recipe_page
+            header, food_page, recipe_page, product_page,
         };
         let widgets = view_output!();
 
@@ -236,6 +275,15 @@ impl SimpleComponent for AppModel {
                         self.recipe_page.emit(
                             RecipePageCommand::LoadFoodIngredientList(
                                 self.data.cuisine.food_list()
+                            )
+                        )
+                    }
+                    AppMode::Products => {
+                        self.state.page = "product_page".to_owned();
+                        //reload recipe ing combobox
+                        self.product_page.emit(
+                            ProductPageCommand::LoadRecipeIngredientList(
+                                self.data.cuisine.recipe_list()
                             )
                         )
                     }
@@ -302,6 +350,17 @@ impl SimpleComponent for AppModel {
             }
             AppCommand::UpdatePortion(id, portion) => {
                 self.data.cuisine.insert_portion(id, portion);
+            }
+            AppCommand::AddProduct(product) => {
+                let id = Uuid::new_v4();
+                let product = Product { id , ..product };
+                self.data.cuisine.insert_product(id, product);
+            }
+            AppCommand::RemoveProduct(id) => {
+                self.data.cuisine.remove_recipe(&id);
+            }
+            AppCommand::UpdateProduct(id, product) => {
+                self.data.cuisine.insert_product(id, product);
             }
             AppCommand::NoCommand => {}
         }

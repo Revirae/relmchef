@@ -9,41 +9,41 @@ use relm4::{Component, ComponentParts};
 use crate::chef::models;
 
 #[derive(Debug)]
-pub struct PortionFormModel {
-    state: models::FoodPortion,
+pub struct RecipePortionFormModel {
+    state: models::RecipePortion,
     ingredient_list: gtk::StringList,
 }
 
 #[derive(Default, Debug)]
-pub enum PortionFormMessage {
+pub enum RecipePortionFormMessage {
     #[default]
     NoMessage,
-    Submit(models::FoodPortion),
+    Submit(models::RecipePortion),
 }
 
 #[derive(Default, Debug)]
-pub enum PortionFormCommand {
+pub enum RecipePortionFormCommand {
     #[default]
     NoCommand,
     Send,
-    Receive(models::FoodPortion),
-    ReceiveFoodList(Vec<models::Food>),
+    Receive(models::RecipePortion),
+    ReceiveRecipeList(Vec<models::Recipe>),
     // ChangeName(String),
 }
 
 #[derive(Default, Debug)]
-pub enum PortionFormAction {
+pub enum RecipePortionFormAction {
     #[default]
     NoAction,
     Fill,
 }
 
 #[relm4::component(pub)]
-impl Component for PortionFormModel {
-    type Init = models::FoodPortion;
-    type Input = PortionFormCommand;
-    type Output = PortionFormMessage;
-    type CommandOutput = PortionFormAction;
+impl Component for RecipePortionFormModel {
+    type Init = models::RecipePortion;
+    type Input = RecipePortionFormCommand;
+    type Output = RecipePortionFormMessage;
+    type CommandOutput = RecipePortionFormAction;
     view! {
         #[root]
         gtk::Box {           
@@ -52,13 +52,14 @@ impl Component for PortionFormModel {
             gtk::DropDown {
                 #[watch]
                 set_model: Some(&model.ingredient_list),
+                set_hexpand: true,
             },
             #[name(send_button)]
             gtk::Button {
                 set_icon_name: "document-new",
                 set_size_request: (50, 32),
                 connect_clicked[sender] => move |_| {
-                    sender.input(PortionFormCommand::Send)
+                    sender.input(RecipePortionFormCommand::Send)
                 }
             },
         }
@@ -69,31 +70,31 @@ impl Component for PortionFormModel {
             sender: ComponentSender<Self>,
     ) -> ComponentParts<Self> {
         let ingredient_list = gtk::StringList::default();
-        let model = PortionFormModel { state: init, ingredient_list };
+        let model = RecipePortionFormModel { state: init, ingredient_list };
         let widgets = view_output!();
 
         ComponentParts { model, widgets }
     }
     fn update(&mut self, message: Self::Input, sender: ComponentSender<Self>, _root: &Self::Root) {
         match message {
-            PortionFormCommand::NoCommand => {}
-            PortionFormCommand::Send => {
+            RecipePortionFormCommand::NoCommand => {}
+            RecipePortionFormCommand::Send => {
                 // todo!("validation");
-                sender.output(PortionFormMessage::Submit(
+                sender.output(RecipePortionFormMessage::Submit(
                     self.state.clone()
                 )).expect("failed to submit form");
             }
-            PortionFormCommand::Receive(portion) => {
+            RecipePortionFormCommand::Receive(portion) => {
                 // dbg!(portion.clone());
                 self.state = portion;
                 sender.spawn_command(|sender|
-                    sender.emit(PortionFormAction::Fill)
+                    sender.emit(RecipePortionFormAction::Fill)
                 );
             }
-            PortionFormCommand::ReceiveFoodList(food_list) => {
-                dbg!(food_list.clone());
-                for food in food_list {
-                    self.ingredient_list.append(&food.name);
+            RecipePortionFormCommand::ReceiveRecipeList(recipe_list) => {
+                dbg!(recipe_list.clone());
+                for recipe in recipe_list {
+                    self.ingredient_list.append(&recipe.name);
                 }
             }
             // PortionFormCommand::ChangeName(text) => {

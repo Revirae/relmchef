@@ -12,6 +12,7 @@ pub struct HeaderModel;
 pub enum Tab {
     Food,
     Recipe,
+    Product,
 }
 
 #[relm4::component(pub)]
@@ -41,6 +42,15 @@ impl SimpleComponent for HeaderModel {
                     connect_toggled[sender] => move |btn| {
                         if btn.is_active() {
                             sender.output(Tab::Recipe).unwrap()
+                        }
+                    },
+                },
+                gtk::ToggleButton {
+                    set_label: "Produtos",
+                    set_group: Some(&group),
+                    connect_toggled[sender] => move |btn| {
+                        if btn.is_active() {
+                            sender.output(Tab::Product).unwrap()
                         }
                     },
                 },

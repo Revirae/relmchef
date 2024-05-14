@@ -1,18 +1,12 @@
-// use adw::gtk::traits::BoxExt;
 use relm4::{adw, gtk, prelude::ComponentSender};
 use gtk::prelude::{
     ButtonExt,
     WidgetExt, OrientableExt,
     EditableExt, ListBoxRowExt,
-    // ActionExt
 };
-use adw::prelude::{
-    PreferencesRowExt,
-    // ActionRowExt,
-};
+use adw::prelude::PreferencesRowExt;
 
 use relm4::{Component, ComponentParts};
-// use relm4::RelmContainerExt;
 
 use crate::chef::models;
 
@@ -20,7 +14,6 @@ use crate::chef::models;
 #[derive(Debug)]
 pub struct FoodFormModel {
     state: models::Food,
-    // buffer: models::Food,
 }
 
 #[derive(Default, Debug)]
@@ -67,9 +60,7 @@ impl Component for FoodFormModel {
                 set_orientation: gtk::Orientation::Horizontal,
                 #[name(name_entry)]
                 adw::EntryRow {
-                    // #[watch(skip_init)]
-                    // set_text: self.state.name.as_ref(),
-                    set_title: "Nome",
+                    set_title: "Nome do alimento",
                     set_hexpand: true,
                     connect_changed[sender] => move |entry| {
                         let name = entry.text().to_string();

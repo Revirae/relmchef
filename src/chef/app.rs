@@ -27,7 +27,7 @@ use self::cuisine::Cuisine;
 
 use super::components::food_page::{FoodPageCommand, FoodPageMessage, FoodPageModel, FoodPageState};
 use super::components::header::HeaderModel;
-use super::components::recipe_page::RecipePageModel;
+use super::components::recipe_page::{RecipePageCommand, RecipePageModel};
 use super::models::{Food, Portion, Recipe};
 
 #[derive(Default, Debug)]
@@ -54,9 +54,6 @@ impl AppState {
 
 #[derive(Default, Debug, Serialize, Deserialize)]
 pub struct AppData {
-    // foodlist: Vec<Food>,
-    // recipelist: Vec<Recipe>,
-    // portionlist: Vec<Portion>,
     cuisine: Cuisine,
 }
 
@@ -94,7 +91,6 @@ pub enum AppCommand {
     AddPortion(Portion),
     RemovePortion(Uuid),
     UpdatePortion(Uuid, Portion),
-    // SendToForm(Food),
 }
 
 #[derive(Debug)]
@@ -128,6 +124,18 @@ impl SimpleComponent for AppModel {
             gtk::Stack {
                 #[watch]
                 set_visible_child_name: model.state.page.as_ref(),
+                // connect_visible_child_notify[sender] => move |stack| {
+                //     if let Some(page_name) = stack.visible_child_name() {
+                //         println!("{}", page_name);
+                //         match String::from(page_name).as_ref() {
+                //             "food_page" => {},
+                //             "recipe_page" => {
+                //                 sender.input(AppCommand::)
+                //             },
+                //             _ => {}
+                //         }
+                //     }
+                // },
                 add_child = &gtk::Box {
                     set_orientation: gtk::Orientation::Vertical,
                     model.food_page.widget(),
@@ -218,21 +226,36 @@ impl SimpleComponent for AppModel {
                 relm4::main_application().quit();
             }
             AppCommand::SetMode(mode) => {
-                self.state.page = match mode {
-                    AppMode::FoodInventory => 
-                        "food_page".to_owned(),
-                    AppMode::Recipes =>
-                        "recipe_page".to_owned(),
+                match mode {
+                    AppMode::FoodInventory => {
+                        self.state.page = "food_page".to_owned();
+                    }
+                    AppMode::Recipes => {
+                        self.state.page = "recipe_page".to_owned();
+                        //reload food ing combobox
+                        self.recipe_page.emit(
+                            RecipePageCommand::LoadFoodIngredientList(
+                                self.data.cuisine.food_list()
+                            )
+                        )
+                    }
                 }
             }
             AppCommand::LoadDatabase => {
                 self.data = AppData::from_file(self.state.database_path.clone())
                     .unwrap_or_default();
+
                 self.food_page.emit(
                     FoodPageCommand::LoadFoodlist(
                         self.data.cuisine.food_list()
                     )
                 );
+                // //when switch pages?
+                // self.recipe_page.emit(
+                //     RecipePageCommand::LoadFoodIngredientList(
+                //         self.data.cuisine.food_list()
+                //     )
+                // )
             }
             AppCommand::PersistDatabase => {
                 self.data.to_file(self.state.database_path.clone())

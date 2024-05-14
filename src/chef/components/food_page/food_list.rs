@@ -80,7 +80,7 @@ impl SimpleComponent for FoodListModel {
                 FoodRowMessage::NoMessage =>
                     FoodListCommand::NoCommand,
                 FoodRowMessage::DeleteMe(index) =>
-                    FoodListCommand::DeleteEntry(index), //DeleteEntry
+                    FoodListCommand::DeleteEntry(index),
                 FoodRowMessage::UpdateMe(index) =>
                     FoodListCommand::UpdateEntry(index),
             });

@@ -72,6 +72,8 @@ pub enum RecipePageCommand {
     PutPortion(models::FoodPortion),
     RemovePortion(usize),
     UpdatePortion(usize),
+
+    LoadFoodIngredientList(Vec<models::Food>),
 }
 
 #[derive(Default, Debug)]
@@ -124,6 +126,9 @@ impl SimpleComponent for RecipePageModel  {
                 PortionFormMessage::NoMessage => {
                     RecipePageCommand::NoCommand
                 }
+                PortionFormMessage::Submit(portion) => {
+                    RecipePageCommand::PutPortion(portion)
+                }
             });
         
         let recipe_list = RecipeListModel::builder()
@@ -152,7 +157,6 @@ impl SimpleComponent for RecipePageModel  {
                     RecipePageCommand::UpdatePortion(index)
                 }
             });
-
         
         let model = RecipePageModel  {
             state: init,
@@ -183,6 +187,11 @@ impl SimpleComponent for RecipePageModel  {
                     );
                 }
             }    
+            RecipePageCommand::LoadFoodIngredientList(food_list) => {
+                self.portion_form.emit(
+                    PortionFormCommand::ReceiveFoodList(food_list)
+                );
+            }
             RecipePageCommand::PutRecipe(recipe) => {
                 match self.state.mode {
                     RecipePageMode::EditingRecipe(index) => {
@@ -264,7 +273,7 @@ impl SimpleComponent for RecipePageModel  {
             RecipePageCommand::UpdatePortion(index) => {
                 let portion= self.state.portionlist.get(index).unwrap();
                 self.portion_form.emit(
-                    PortionFormCommand::Receive(portion.clone().inner)
+                    PortionFormCommand::Receive(portion.clone())
                 );
                 self.state.mode = RecipePageMode::EditingRecipe(index);
                 // self.recipe_form.emit(

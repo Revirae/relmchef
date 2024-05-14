@@ -45,28 +45,28 @@ impl Component for RecipeFormModel {
     view! {
         #[root]
         gtk::Box {           
-                set_orientation: gtk::Orientation::Horizontal,
-                #[name(name_entry)]
-                adw::EntryRow {
-                    // #[watch(skip_init)]
-                    // set_text: self.state.name.as_ref(),
-                    set_title: "Nome",
-                    set_hexpand: true,
-                    connect_changed[sender] => move |entry| {
-                        let name = entry.text().to_string();
-                        sender.input(
-                            RecipeFormCommand::ChangeName(name)
-                        )
-                    }
-                },
-                #[name(send_button)]
-                gtk::Button {
-                    set_icon_name: "document-new",
-                    set_size_request: (50, 32),
-                    connect_clicked[sender] => move |_| {
-                        sender.input(RecipeFormCommand::Send)
-                    }
-                },
+            set_orientation: gtk::Orientation::Horizontal,
+            #[name(name_entry)]
+            adw::EntryRow {
+                // #[watch(skip_init)]
+                // set_text: self.state.name.as_ref(),
+                set_title: "Nome",
+                set_hexpand: true,
+                connect_changed[sender] => move |entry| {
+                    let name = entry.text().to_string();
+                    sender.input(
+                        RecipeFormCommand::ChangeName(name)
+                    )
+                }
+            },
+            #[name(send_button)]
+            gtk::Button {
+                set_icon_name: "document-new",
+                set_size_request: (50, 32),
+                connect_clicked[sender] => move |_| {
+                    sender.input(RecipeFormCommand::Send)
+                }
+            },
         }
     }
     fn init(

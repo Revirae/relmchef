@@ -40,10 +40,8 @@ use self::recipe_list::{RecipeListCommand, RecipeListModel};
 #[derive(Default, Debug)]
 pub enum RecipePageMode {
     #[default]
-    InsertingRecipe,
+    Inserting,
     EditingRecipe(usize),
-    #[allow(dead_code)]
-    InsertingPortion,
     #[allow(dead_code)]
     EditingPortion(usize),
 }
@@ -217,13 +215,13 @@ impl SimpleComponent for RecipePageModel  {
                         sender.output(
                             RecipePageMessage::CommitRecipeUpdate(recipe.id, recipe)
                         ).expect("failed to commit recipe update");
-                        self.state.mode = RecipePageMode::InsertingRecipe;
+                        self.state.mode = RecipePageMode::Inserting;
 
                         // self.recipe_form.emit(
                             // RecipeFormCommand::ChangeIcon("document-new".into())
                         // );
                     }
-                    RecipePageMode::InsertingRecipe => {
+                    RecipePageMode::Inserting => {
                         self.state.recipelist.push(recipe.clone());
                         self.recipe_list.emit(
                             RecipeListCommand::AddEntry(recipe.clone())
@@ -261,13 +259,13 @@ impl SimpleComponent for RecipePageModel  {
                         sender.output(
                             RecipePageMessage::CommitPortionUpdate(portion.inner.id, portion)
                         ).expect("failed to commit portion update");
-                        self.state.mode = RecipePageMode::InsertingRecipe;
+                        self.state.mode = RecipePageMode::Inserting;
 
                         // self.recipe_form.emit(
                             // PortionFormCommand::ChangeIcon("document-new".into())
                         // );
                     }
-                    RecipePageMode::InsertingPortion => {
+                    RecipePageMode::Inserting => {
                         self.state.foodportionlist.push(portion.clone());
                         self.food_portion_list.emit(
                             FoodPortionListCommand::AddEntry(portion.clone())

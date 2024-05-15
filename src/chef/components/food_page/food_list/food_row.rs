@@ -3,7 +3,11 @@ use relm4::factory::DynamicIndex;
 use relm4::gtk;
 use relm4::prelude::FactoryComponent;
 use gtk::prelude::WidgetExt;
-use libadwaita::prelude::{PreferencesRowExt, ComboRowExt};
+use libadwaita::prelude::{
+    PreferencesRowExt,
+    ComboRowExt,
+    ListBoxRowExt,
+};
 use relm4::adw::prelude::ActionRowExt;
 
 use crate::chef::models;
@@ -41,18 +45,16 @@ impl FactoryComponent for FoodRow {
     type ParentWidget = gtk::ListBox;
 
     view! {
-        // gtk::Box {
-            // append = 
         ComboRow {
+            set_activatable: false,
             set_hexpand: true,
             set_title: &self.title,
             set_subtitle: &self.subtitle,
-            // set_title_selectable: false,
         
             #[wrap(Some)]
             set_model = &gtk::StringList::new(&[
                 &"",
-                &"----",
+                &"editar",
                 &"excluir"
             ]),
 

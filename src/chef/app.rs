@@ -290,7 +290,9 @@ impl SimpleComponent for AppModel {
                 }
             }
             AppCommand::LoadDatabase => {
-                self.data = AppData::from_file(self.state.database_path.clone())
+                self.data = AppData::from_file(
+                    self.state.database_path.clone()
+                )
                     .unwrap_or_default();
 
                 self.food_page.emit(

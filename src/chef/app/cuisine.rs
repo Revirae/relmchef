@@ -40,13 +40,15 @@ impl Cuisine {
     }
     pub fn food_portion_list(&self) -> Vec<FoodPortion> {
         self.portion_list().into_iter().map(|portion| {
+            // dbg!(portion.clone());
+            // dbg!(self.foodlist.clone());
             let ingredient = self.foodlist
                 .get(&portion.ingredient_id)
-                .unwrap()
+                .expect("failed to get ingredient for food portion list")
                 .clone();
             let recipe = self.recipelist
                 .get(&portion.recipe_id)
-                .unwrap()
+                .expect("failed to get recipe for food portion list")
                 .clone();
             FoodPortion {
                 inner: portion,

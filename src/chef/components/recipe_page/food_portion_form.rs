@@ -8,10 +8,12 @@ use relm4::{Component, ComponentParts};
 
 use crate::chef::models;
 
+
 #[derive(Debug)]
 pub struct FoodPortionFormModel {
     state: models::FoodPortion,
-    ingredient_list: gtk::StringList,
+    food_list: Vec<models::Food>,
+    food_name_list: gtk::StringList,
 }
 
 #[derive(Default, Debug)]
@@ -28,7 +30,7 @@ pub enum FoodPortionFormCommand {
     Send,
     Receive(models::FoodPortion),
     ReceiveFoodList(Vec<models::Food>),
-    // ChangeName(String),
+    ChangeSelected(usize),
 }
 
 #[derive(Default, Debug)]
@@ -51,8 +53,15 @@ impl Component for FoodPortionFormModel {
             #[name(name_entry)]
             gtk::DropDown {
                 #[watch]
-                set_model: Some(&model.ingredient_list),
+                set_model: Some(&model.food_name_list),
                 set_hexpand: true,
+                set_sensitive: false,
+                connect_selected_notify[sender] => move |dd| {
+                    let index = dd.selected() as usize;
+                    sender.input(
+                        FoodPortionFormCommand::ChangeSelected(index)
+                    );
+                },
             },
             #[name(send_button)]
             gtk::Button {
@@ -69,8 +78,11 @@ impl Component for FoodPortionFormModel {
             root: Self::Root,
             sender: ComponentSender<Self>,
     ) -> ComponentParts<Self> {
-        let ingredient_list = gtk::StringList::default();
-        let model = FoodPortionFormModel { state: init, ingredient_list };
+        let food_list = Vec::<models::Food>::new();
+        let food_name_list = gtk::StringList::default();
+        let model = FoodPortionFormModel {
+            state: init, food_name_list, food_list 
+        };
         let widgets = view_output!();
 
         ComponentParts { model, widgets }
@@ -85,21 +97,22 @@ impl Component for FoodPortionFormModel {
                 )).expect("failed to submit form");
             }
             FoodPortionFormCommand::Receive(portion) => {
-                // dbg!(portion.clone());
                 self.state = portion;
                 sender.spawn_command(|sender|
                     sender.emit(FoodPortionFormAction::Fill)
                 );
             }
             FoodPortionFormCommand::ReceiveFoodList(food_list) => {
-                dbg!(food_list.clone());
-                for food in food_list {
-                    self.ingredient_list.append(&food.name);
+                self.food_list = food_list;
+                for food in self.food_list.iter() {
+                    self.food_name_list.append(&food.name);
                 }
             }
-            // PortionFormCommand::ChangeName(text) => {
-                // self.state.ingredient.name = text;
-            // }
+            FoodPortionFormCommand::ChangeSelected(index) => {
+                let food = self.food_list.get(index).unwrap();
+                self.state.set_ingredient(food);
+                dbg!(food.clone());
+            }
         }
     }
 }

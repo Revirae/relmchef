@@ -32,7 +32,8 @@ impl SimpleComponent for HeaderModel {
                     set_active: true,
                     connect_toggled[sender] => move |btn| {
                         if btn.is_active() {
-                            sender.output(Tab::Food).unwrap()
+                            sender.output(Tab::Food)
+                                .expect("failed to toggle food tab")
                         }
                     },
                 },
@@ -41,7 +42,8 @@ impl SimpleComponent for HeaderModel {
                     set_group: Some(&group),
                     connect_toggled[sender] => move |btn| {
                         if btn.is_active() {
-                            sender.output(Tab::Recipe).unwrap()
+                            sender.output(Tab::Recipe)
+                                .expect("failed to toggle recipe tab")
                         }
                     },
                 },
@@ -50,7 +52,8 @@ impl SimpleComponent for HeaderModel {
                     set_group: Some(&group),
                     connect_toggled[sender] => move |btn| {
                         if btn.is_active() {
-                            sender.output(Tab::Product).unwrap()
+                            sender.output(Tab::Product)
+                                .expect("failed to toggle product tab")
                         }
                     },
                 },

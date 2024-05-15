@@ -54,3 +54,14 @@ pub struct RecipePortion {
     pub ingredient: Recipe,
     pub product: Product,
 }
+
+impl FoodPortion {
+    pub fn set_ingredient(&mut self, ingredient: &Food) {
+        self.inner.ingredient_id = ingredient.id;
+        self.ingredient = ingredient.clone();
+    }
+    pub fn set_recipe(&mut self, recipe: &Recipe) {
+        self.inner.recipe_id = recipe.id;
+        self.recipe = recipe.clone();
+    }
+}

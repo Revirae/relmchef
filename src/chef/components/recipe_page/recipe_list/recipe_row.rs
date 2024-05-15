@@ -2,10 +2,16 @@
 use relm4::gtk;
 use relm4::factory::{DynamicIndex, FactoryComponent};
 use libadwaita::ComboRow;
-use libadwaita::prelude::{PreferencesRowExt, ComboRowExt, ActionRowExt};
+use libadwaita::prelude::{
+    PreferencesRowExt,
+    ComboRowExt,
+    ActionRowExt,
+    ListBoxRowExt,
+};
 use gtk::prelude::WidgetExt;
 
 use crate::chef::models;
+
 
 #[derive(Debug)]
 pub struct RecipeRow {
@@ -40,15 +46,16 @@ impl FactoryComponent for RecipeRow {
 
     view! {
         ComboRow {
+            set_activatable: false,
+            // set_selectable: false,
             set_hexpand: true,
             set_title: &self.title,
             set_subtitle: &self.subtitle,
-            // set_title_selectable: false,
         
             #[wrap(Some)]
             set_model = &gtk::StringList::new(&[
                 &"",
-                &"----",
+                &"editar",
                 &"excluir"
             ]),
 
@@ -86,8 +93,8 @@ impl FactoryComponent for RecipeRow {
     fn update(&mut self, message: Self::Input, sender: relm4::prelude::FactorySender<Self>) {
         match message {
             RecipeRowCommand::Action(action, index) => {
-                dbg!(action);
-                dbg!(index.clone());
+                // dbg!(action);
+                // dbg!(index.clone());
                 let message = match action {
                     2 => RecipeRowMessage::DeleteMe(index),
                     1 => RecipeRowMessage::UpdateMe(index),

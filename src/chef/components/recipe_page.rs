@@ -237,6 +237,8 @@ impl SimpleComponent for RecipePageModel  {
                         // );
                     }
                     RecipePageMode::Inserting => {
+                        let id = Uuid::new_v4();
+                        let recipe = Recipe { id, ..recipe };
                         self.state.recipelist.push(recipe.clone());
                         self.recipe_list.emit(
                             RecipeListCommand::AddEntry(recipe.clone())
@@ -267,7 +269,7 @@ impl SimpleComponent for RecipePageModel  {
             }
             RecipePageCommand::BuildRecipe(index) => {
                 let recipe = self.state.recipelist.get(index).unwrap();
-                self.food_portion_form.emit(FoodPortionFormCommand::Enable(recipe.id));
+                self.food_portion_form.emit(FoodPortionFormCommand::HookToRecipe(recipe.id));
                 sender.input(RecipePageCommand::LoadFoodPortionList(recipe.id));
             }
             RecipePageCommand::PutPortion(portion) => {

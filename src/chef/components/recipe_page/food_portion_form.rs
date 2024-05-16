@@ -12,7 +12,7 @@ use adw::prelude::PreferencesRowExt;
 use relm4::{Component, ComponentParts};
 use uuid::Uuid;
 
-use crate::chef::models;
+use crate::chef::models::{self, IngredientUnity};
 
 
 #[derive(Debug)]
@@ -21,6 +21,7 @@ pub struct FoodPortionFormModel {
     food_list: Vec<models::Food>,
     food_map: HashMap<Uuid, models::Food>,
     food_name_list: gtk::StringList,
+    unity: models::IngredientUnity
 }
 
 #[derive(Default, Debug)]
@@ -34,12 +35,13 @@ pub enum FoodPortionFormMessage {
 pub enum FoodPortionFormCommand {
     #[default]
     NoCommand,
-    Enable(Uuid),
+    HookToRecipe(Uuid),
     Send,
     Receive(models::FoodPortion),
     ReceiveFoodList(Vec<models::Food>),
     ChangeSelected(usize),
     ChangeAmount(f64),
+    ChangeUnity(u32),
 }
 
 #[derive(Default, Debug)]
@@ -47,7 +49,8 @@ pub enum FoodPortionFormAction {
     #[default]
     NoAction,
     Fill,
-    EditableEntry(bool),
+    EnableDropDown(bool),
+    EnableSend(bool),
 }
 
 #[relm4::component(pub)]
@@ -71,6 +74,11 @@ impl Component for FoodPortionFormModel {
                     sender.input(
                         FoodPortionFormCommand::ChangeSelected(index)
                     );
+                    sender.spawn_command(|sender| {
+                        sender.emit(
+                            FoodPortionFormAction::EnableSend(true)
+                        )
+                    })
                 },
             },
             #[name(amount_entry)]
@@ -88,8 +96,20 @@ impl Component for FoodPortionFormModel {
                     )
                 }
             },
+            #[name(unity_entry)]
+            gtk::DropDown {
+                set_model: Some(&gtk::StringList::new(&[
+                    &"g", &"ml", &"un."
+                ])),
+                connect_selected_notify[sender] => move |dd| {
+                    sender.input(
+                        FoodPortionFormCommand::ChangeUnity(dd.selected())
+                    )
+                }
+            },
             #[name(send_button)]
             gtk::Button {
+                set_sensitive: false,
                 set_icon_name: "document-new",
                 set_size_request: (50, 32),
                 connect_clicked[sender] => move |_| {
@@ -106,8 +126,9 @@ impl Component for FoodPortionFormModel {
         let food_list = Vec::<models::Food>::new();
         let food_map = HashMap::<Uuid, models::Food>::new();
         let food_name_list = gtk::StringList::default();
+        let unity = IngredientUnity::default();
         let model = FoodPortionFormModel {
-            state: init, food_name_list, food_list, food_map
+            state: init, food_name_list, food_list, food_map, unity
         };
         let widgets = view_output!();
 
@@ -130,9 +151,12 @@ impl Component for FoodPortionFormModel {
                     widgets.name_entry.set_selected(position as u32);
                 }
             }
-            FoodPortionFormAction::EditableEntry(is_editable) => {
-                dbg!(is_editable);
-                widgets.name_entry.set_sensitive(is_editable);
+            FoodPortionFormAction::EnableDropDown(is_enabled) => {
+                // dbg!(is_enabled);
+                widgets.name_entry.set_sensitive(is_enabled);
+            }
+            FoodPortionFormAction::EnableSend(is_enabled) => {
+                widgets.send_button.set_sensitive(is_enabled);
             }
             _ => {}
         }
@@ -140,12 +164,19 @@ impl Component for FoodPortionFormModel {
     fn update(&mut self, message: Self::Input, sender: ComponentSender<Self>, _root: &Self::Root) {
         match message {
             FoodPortionFormCommand::NoCommand => {}
-            FoodPortionFormCommand::Enable(recipe_id) => {
+            FoodPortionFormCommand::HookToRecipe(recipe_id) => {
                 dbg!(recipe_id);
                 self.state.inner.recipe_id = recipe_id;
                 sender.spawn_command(|sender| {
-                    sender.emit(FoodPortionFormAction::EditableEntry(true))
+                    sender.emit(FoodPortionFormAction::EnableDropDown(true))
                 });
+            }
+            FoodPortionFormCommand::ChangeUnity(index) => {
+                self.unity = match index {
+                    1 => IngredientUnity::Mililiter,
+                    2 => IngredientUnity::Unity,
+                    _ => IngredientUnity::Gram,
+                }
             }
             FoodPortionFormCommand::Send => {
                 // todo!("validation");
@@ -175,7 +206,14 @@ impl Component for FoodPortionFormModel {
                 dbg!(food.clone());
             }
             FoodPortionFormCommand::ChangeAmount(amount) => {
-                self.state.inner.amount_w = amount;
+                match self.unity {
+                    IngredientUnity::Gram =>
+                        self.state.inner.amount_w = amount,
+                    IngredientUnity::Mililiter =>
+                        self.state.inner.amount_v = amount,
+                    IngredientUnity::Unity =>
+                        self.state.inner.amount_u = amount,
+                }
             }
         }
     }

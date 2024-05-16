@@ -8,6 +8,14 @@ pub enum IngredientType {
     FoodIngredient,
 }
 
+#[derive(Default, Debug, Clone)]
+pub enum IngredientUnity {
+    #[default]
+    Gram,
+    Mililiter,
+    Unity,
+}
+
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub struct Food {
     pub id: Uuid,
@@ -32,7 +40,7 @@ pub struct Portion {
     pub recipe_id: Uuid,
     pub amount_w: f64,
     pub amount_v: f64,
-    pub amount_u: usize,
+    pub amount_u: f64,
 }
 
 #[derive(Debug, Default, Clone)]
@@ -60,8 +68,9 @@ impl FoodPortion {
         self.inner.ingredient_id = ingredient.id;
         self.ingredient = ingredient.clone();
     }
-    pub fn set_recipe(&mut self, recipe: &Recipe) {
-        self.inner.recipe_id = recipe.id;
-        self.recipe = recipe.clone();
-    }
+
+    // pub fn set_recipe(&mut self, recipe: &Recipe) {
+    //     self.inner.recipe_id = recipe.id;
+    //     self.recipe = recipe.clone();
+    // }
 }

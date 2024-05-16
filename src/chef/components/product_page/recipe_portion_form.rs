@@ -21,6 +21,7 @@ pub enum RecipePortionFormMessage {
     Submit(models::RecipePortion),
 }
 
+#[allow(dead_code)]
 #[derive(Default, Debug)]
 pub enum RecipePortionFormCommand {
     #[default]

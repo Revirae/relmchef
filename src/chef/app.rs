@@ -332,9 +332,9 @@ impl SimpleComponent for AppModel {
             }
             AppCommand::AddRecipe(recipe) => {
                 // self.data.recipelist.push(recipe);
-                let id = Uuid::new_v4();
-                let recipe = Recipe { id, ..recipe };
-                self.data.cuisine.insert_recipe(id, recipe);
+                // let id = Uuid::new_v4();
+                // let recipe = Recipe { id, ..recipe };
+                self.data.cuisine.insert_recipe(recipe.id, recipe);
             }
             AppCommand::RemoveRecipe(id) => {
                 self.data.cuisine.remove_food(&id);

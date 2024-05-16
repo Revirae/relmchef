@@ -26,6 +26,7 @@ pub enum ProductFormCommand {
     #[default]
     NoCommand,
     Send,
+    #[allow(dead_code)]
     Receive(models::Product),
     ChangeName(String),
 }

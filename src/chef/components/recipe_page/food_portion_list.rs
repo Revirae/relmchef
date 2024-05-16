@@ -30,6 +30,7 @@ pub struct FoodPortionListModel {
 pub enum FoodPortionListCommand {
     #[default]
     NoCommand,
+    Clear,
     AddEntry(FoodPortion),
     InsertEntry(usize, FoodPortion),
     DeleteEntry(DynamicIndex),
@@ -84,7 +85,7 @@ impl SimpleComponent for FoodPortionListModel {
                     FoodPortionListCommand::NoCommand,
                 FoodPortionRowMessage::DeleteMe(index) =>
                     FoodPortionListCommand::DeleteEntry(index), //DeleteEntry
-                FoodPortionRowMessage::UpdateMe(index) =>
+                FoodPortionRowMessage::EditMe(index) =>
                     FoodPortionListCommand::UpdateEntry(index),
             });
         let model = FoodPortionListModel {
@@ -102,6 +103,9 @@ impl SimpleComponent for FoodPortionListModel {
     fn update(&mut self, message: Self::Input, sender: ComponentSender<Self>) {
         match message {
             FoodPortionListCommand::NoCommand => {}
+            FoodPortionListCommand::Clear => {
+                self.portionlist.guard().clear();
+            }
             FoodPortionListCommand::AddEntry(portion) => {
                 self.portionlist.guard().push_back(portion);
             }
@@ -113,13 +117,12 @@ impl SimpleComponent for FoodPortionListModel {
                 let i = index.current_index();
                 self.portionlist.guard().remove(i);
                 sender.output(FoodPortionListMessage::RequestRemoval(i))
-                    .expect("failed to request portion removal");
+                    .expect("failed to request food portion removal");
             }
             FoodPortionListCommand::UpdateEntry(index) => {
                 let i = index.current_index();
-                // self.portionlist.guard().remove(i);
                 sender.output(FoodPortionListMessage::RequestUpdate(i))
-                    .expect("failed to request portion update");
+                    .expect("failed to request food portion update");
             }
         }
     }

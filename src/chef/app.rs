@@ -306,7 +306,7 @@ impl SimpleComponent for AppModel {
                     )
                 );
                 self.recipe_page.emit(
-                    RecipePageCommand::LoadFoodPortionList(
+                    RecipePageCommand::ReceiveFoodPortionList(
                         self.data.cuisine.food_portion_list()
                     )
                 );

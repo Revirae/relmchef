@@ -1,10 +1,13 @@
 use std::collections::HashMap;
 
-use relm4::{gtk, prelude::ComponentSender};
+use relm4::{gtk, adw, prelude::ComponentSender};
 use gtk::prelude::{
     ButtonExt,
     WidgetExt, OrientableExt,
+    EditableExt,
 };
+
+use adw::prelude::PreferencesRowExt;
 
 use relm4::{Component, ComponentParts};
 use uuid::Uuid;
@@ -36,6 +39,7 @@ pub enum FoodPortionFormCommand {
     Receive(models::FoodPortion),
     ReceiveFoodList(Vec<models::Food>),
     ChangeSelected(usize),
+    ChangeAmount(f64),
 }
 
 #[derive(Default, Debug)]
@@ -68,6 +72,21 @@ impl Component for FoodPortionFormModel {
                         FoodPortionFormCommand::ChangeSelected(index)
                     );
                 },
+            },
+            #[name(amount_entry)]
+            adw::SpinRow {
+                set_hexpand: true,
+                set_title: "<span size='x-small'>Qtd.</span>",
+                set_digits: 2,
+                set_adjustment: Some(&gtk::Adjustment::new(
+                    0., 0., 9999., 0.05, 0.5, 10.
+                )),
+                connect_changed[sender] => move |entry| {
+                    let amount = entry.value();
+                    sender.input(
+                        FoodPortionFormCommand::ChangeAmount(amount)
+                    )
+                }
             },
             #[name(send_button)]
             gtk::Button {
@@ -103,7 +122,13 @@ impl Component for FoodPortionFormModel {
         ) {
         match message {
             FoodPortionFormAction::Fill => {
-                // widgets.name_entry self.state.ingredient.name;
+                let maybe_position = self.food_list.iter().position(|food| {
+                    food.id == self.state.inner.ingredient_id
+                });
+                if let Some(position) = maybe_position {
+                    dbg!(position);
+                    widgets.name_entry.set_selected(position as u32);
+                }
             }
             FoodPortionFormAction::EditableEntry(is_editable) => {
                 dbg!(is_editable);
@@ -145,11 +170,12 @@ impl Component for FoodPortionFormModel {
                 self.food_list = food_list;
             }
             FoodPortionFormCommand::ChangeSelected(index) => {
-                // dbg!(index);
-                // dbg!(self.food_list.clone());
                 let food = self.food_list.get(index).unwrap();
                 self.state.set_ingredient(food);
                 dbg!(food.clone());
+            }
+            FoodPortionFormCommand::ChangeAmount(amount) => {
+                self.state.inner.amount_w = amount;
             }
         }
     }

@@ -73,7 +73,8 @@ pub enum RecipePageCommand {
     UpdateRecipe(usize),
     BuildRecipe(usize),
 
-    LoadFoodPortionList(Vec<models::FoodPortion>),
+    ReceiveFoodPortionList(Vec<models::FoodPortion>),
+    LoadFoodPortionList(Uuid),
     PutPortion(models::FoodPortion),
     RemovePortion(usize),
     UpdatePortion(usize),
@@ -112,8 +113,8 @@ impl SimpleComponent for RecipePageModel  {
                     model.recipe_list.widget(),
                 },
                 gtk::Box {
-                    set_orientation: gtk::Orientation::Vertical,
                     set_hexpand: true,
+                    set_orientation: gtk::Orientation::Vertical,
                     model.food_portion_form.widget(),
                     model.food_portion_list.widget(),
                 }
@@ -189,6 +190,9 @@ impl SimpleComponent for RecipePageModel  {
     fn update(&mut self, message: Self::Input, sender: ComponentSender<Self>) {
         match message {
             RecipePageCommand::NoCommand => {}
+            RecipePageCommand::ReceiveFoodPortionList(portionlist) => {
+                self.state.foodportionlist = portionlist.clone();
+            }
             RecipePageCommand::LoadRecipeList(recipelist) => {
                 dbg!(recipelist.clone());
                 self.state.recipelist = recipelist.clone();
@@ -198,9 +202,15 @@ impl SimpleComponent for RecipePageModel  {
                     );
                 }
             }    
-            RecipePageCommand::LoadFoodPortionList(portionlist) => {
-                self.state.foodportionlist = portionlist.clone();
-                for portion in portionlist {
+            RecipePageCommand::LoadFoodPortionList(recipe_id) => {
+                let foodportionlist: Vec<FoodPortion> =
+                    self.state.foodportionlist
+                        .clone()
+                        .into_iter()
+                        .filter(|portion| portion.inner.recipe_id == recipe_id)
+                        .collect();
+                self.food_portion_list.emit(FoodPortionListCommand::Clear);
+                for portion in foodportionlist {
                     self.food_portion_list.emit(
                         FoodPortionListCommand::AddEntry(portion)
                     );
@@ -257,8 +267,8 @@ impl SimpleComponent for RecipePageModel  {
             }
             RecipePageCommand::BuildRecipe(index) => {
                 let recipe = self.state.recipelist.get(index).unwrap();
-                dbg!(recipe);
                 self.food_portion_form.emit(FoodPortionFormCommand::Enable(recipe.id));
+                sender.input(RecipePageCommand::LoadFoodPortionList(recipe.id));
             }
             RecipePageCommand::PutPortion(portion) => {
                 match self.state.mode {

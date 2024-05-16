@@ -12,8 +12,8 @@ use crate::chef::models;
 pub struct FoodPortionRow {
     title: String,
     subtitle: String,
-    #[allow(dead_code)]
-    index: DynamicIndex,
+    // #[allow(dead_code)]
+    // index: DynamicIndex,
 }
 
 #[derive(Default, Debug)]
@@ -21,17 +21,32 @@ pub enum FoodPortionRowCommand {
     #[default]
     NoCommand,
     #[allow(dead_code)]
-    Action(u32, DynamicIndex),
+    Action(FoodPortionRowAction, DynamicIndex),
 }
 
 #[derive(Default, Debug)]
 pub enum FoodPortionRowMessage {
     #[default]
     NoMessage,
-    #[allow(dead_code)]
     DeleteMe(DynamicIndex),
-    #[allow(dead_code)]
-    UpdateMe(DynamicIndex),
+    EditMe(DynamicIndex),
+}
+
+#[derive(Debug)]
+pub enum FoodPortionRowAction {
+    Edit,
+    // EditName,
+    Delete,
+}
+
+impl FoodPortionRowAction {
+    pub fn to_string(&self) -> String {
+        match self {
+            Self::Edit => { "editar".into() }
+            // Self::EditName => { "mudar nome".into() }
+            Self::Delete => { "remover".into() }
+        }
+    }
 }
 
 #[relm4::factory(pub)]
@@ -47,13 +62,12 @@ impl FactoryComponent for FoodPortionRow {
             set_hexpand: true,
             set_title: &self.title,
             set_subtitle: &self.subtitle,
-            // set_title_selectable: false,
         
             #[wrap(Some)]
             set_model = &gtk::StringList::new(&[
                 &"",
-                &"----",
-                &"excluir"
+                &FoodPortionRowAction::Edit.to_string(),
+                &FoodPortionRowAction::Delete.to_string(),
             ]),
 
             // set_selected: CONFIG.game.enhancements.gamescope.window_type.ordinal() as u32,
@@ -71,20 +85,37 @@ impl FactoryComponent for FoodPortionRow {
             sender: relm4::prelude::FactorySender<Self>,
         ) -> Self::Widgets {
             let index = index.clone();
-            root.connect_selected_item_notify(move |cr|
-                sender.input(FoodPortionRowCommand::Action(
-                    cr.selected(), 
-                    index.clone()
-                ))
-            );
+            root.connect_selected_item_notify(move |cr| {
+                let maybe_action = match cr.selected() {
+                    1 => Some(FoodPortionRowAction::Edit),
+                    2 => Some(FoodPortionRowAction::Delete),
+                    _ => None
+                };
+                if let Some(action) = maybe_action {
+                    sender.input(FoodPortionRowCommand::Action(action, index.clone()))
+                }
+            });
             let widgets = view_output!();     
             widgets
     }
-    fn init_model(portion: Self::Init, index: &Self::Index, _sender: relm4::prelude::FactorySender<Self>) -> Self {
+    fn init_model(portion: Self::Init, _index: &Self::Index, _sender: relm4::prelude::FactorySender<Self>) -> Self {
         Self {
-            index: index.clone().into(),
+            // index: index.clone().into(),
             title: portion.ingredient.name,
             subtitle: portion.recipe.name,
+        }
+    }
+    fn update(&mut self, message: Self::Input, sender: relm4::prelude::FactorySender<Self>) {
+        match message {
+            FoodPortionRowCommand::Action(action, index) => {
+                let message = match action {
+                    FoodPortionRowAction::Delete => FoodPortionRowMessage::DeleteMe(index),
+                    FoodPortionRowAction::Edit => FoodPortionRowMessage::EditMe(index),
+                };
+                sender.output(message)
+                    .expect("failed to output recipe row message while processing selected Action");
+            }
+            FoodPortionRowCommand::NoCommand => {}
         }
     }
 }

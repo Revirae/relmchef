@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use relm4::{gtk, prelude::ComponentSender};
 use gtk::prelude::{
     ButtonExt,
@@ -5,6 +7,7 @@ use gtk::prelude::{
 };
 
 use relm4::{Component, ComponentParts};
+use uuid::Uuid;
 
 use crate::chef::models;
 
@@ -13,6 +16,7 @@ use crate::chef::models;
 pub struct FoodPortionFormModel {
     state: models::FoodPortion,
     food_list: Vec<models::Food>,
+    food_map: HashMap<Uuid, models::Food>,
     food_name_list: gtk::StringList,
 }
 
@@ -27,6 +31,7 @@ pub enum FoodPortionFormMessage {
 pub enum FoodPortionFormCommand {
     #[default]
     NoCommand,
+    Enable(Uuid),
     Send,
     Receive(models::FoodPortion),
     ReceiveFoodList(Vec<models::Food>),
@@ -38,6 +43,7 @@ pub enum FoodPortionFormAction {
     #[default]
     NoAction,
     Fill,
+    EditableEntry(bool),
 }
 
 #[relm4::component(pub)]
@@ -79,17 +85,43 @@ impl Component for FoodPortionFormModel {
             sender: ComponentSender<Self>,
     ) -> ComponentParts<Self> {
         let food_list = Vec::<models::Food>::new();
+        let food_map = HashMap::<Uuid, models::Food>::new();
         let food_name_list = gtk::StringList::default();
         let model = FoodPortionFormModel {
-            state: init, food_name_list, food_list 
+            state: init, food_name_list, food_list, food_map
         };
         let widgets = view_output!();
 
         ComponentParts { model, widgets }
     }
+    fn update_cmd_with_view(
+            &mut self,
+            widgets: &mut Self::Widgets,
+            message: Self::CommandOutput,
+            _sender: ComponentSender<Self>,
+            _root: &Self::Root,
+        ) {
+        match message {
+            FoodPortionFormAction::Fill => {
+                // widgets.name_entry self.state.ingredient.name;
+            }
+            FoodPortionFormAction::EditableEntry(is_editable) => {
+                dbg!(is_editable);
+                widgets.name_entry.set_sensitive(is_editable);
+            }
+            _ => {}
+        }
+    }
     fn update(&mut self, message: Self::Input, sender: ComponentSender<Self>, _root: &Self::Root) {
         match message {
             FoodPortionFormCommand::NoCommand => {}
+            FoodPortionFormCommand::Enable(recipe_id) => {
+                dbg!(recipe_id);
+                self.state.inner.recipe_id = recipe_id;
+                sender.spawn_command(|sender| {
+                    sender.emit(FoodPortionFormAction::EditableEntry(true))
+                });
+            }
             FoodPortionFormCommand::Send => {
                 // todo!("validation");
                 sender.output(FoodPortionFormMessage::Submit(
@@ -103,12 +135,18 @@ impl Component for FoodPortionFormModel {
                 );
             }
             FoodPortionFormCommand::ReceiveFoodList(food_list) => {
-                self.food_list = food_list;
-                for food in self.food_list.iter() {
+                for food in food_list.iter() {
                     self.food_name_list.append(&food.name);
+                self.food_map = food_list
+                    .iter()
+                    .map(|food| (food.id, food.clone()))
+                    .collect();
                 }
+                self.food_list = food_list;
             }
             FoodPortionFormCommand::ChangeSelected(index) => {
+                // dbg!(index);
+                // dbg!(self.food_list.clone());
                 let food = self.food_list.get(index).unwrap();
                 self.state.set_ingredient(food);
                 dbg!(food.clone());

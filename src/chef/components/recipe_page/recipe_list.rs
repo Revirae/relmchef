@@ -34,6 +34,7 @@ pub enum RecipeListCommand {
     InsertEntry(usize, Recipe),
     DeleteEntry(DynamicIndex),
     UpdateEntry(DynamicIndex),
+    BuildEntry(DynamicIndex),
 }
 
 #[derive(Default, Debug)]
@@ -42,6 +43,7 @@ pub enum RecipeListMessage {
     NoMessage,
     RequestRemoval(usize),
     RequestUpdate(usize),
+    RequestBuilding(usize),
 }
 
 
@@ -84,8 +86,10 @@ impl SimpleComponent for RecipeListModel {
                     RecipeListCommand::NoCommand,
                 RecipeRowMessage::DeleteMe(index) =>
                     RecipeListCommand::DeleteEntry(index), //DeleteEntry
-                RecipeRowMessage::UpdateMe(index) =>
+                RecipeRowMessage::UpdateMyName(index) =>
                     RecipeListCommand::UpdateEntry(index),
+                RecipeRowMessage::BuildMode(index) =>
+                    RecipeListCommand::BuildEntry(index),
             });
         let model = RecipeListModel {
             state: init,
@@ -117,9 +121,13 @@ impl SimpleComponent for RecipeListModel {
             }
             RecipeListCommand::UpdateEntry(index) => {
                 let i = index.current_index();
-                // self.recipelist.guard().remove(i);
                 sender.output(RecipeListMessage::RequestUpdate(i))
                     .expect("failed to request recipe update")
+            }
+            RecipeListCommand::BuildEntry(index) => {
+                let i = index.current_index();
+                sender.output(RecipeListMessage::RequestBuilding(i))
+                    .expect("failed to request recipe build mode")
             }
         }
     }

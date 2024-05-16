@@ -21,11 +21,28 @@ pub struct RecipeRow {
     index: DynamicIndex,
 }
 
+#[derive(Debug)]
+pub enum RecipeRowAction {
+    Edit,
+    EditName,
+    Delete,
+}
+
+impl RecipeRowAction {
+    pub fn to_string(&self) -> String {
+        match self {
+            Self::Edit => { "editar".into() }
+            Self::EditName => { "mudar nome".into() }
+            Self::Delete => { "remover".into() }
+        }
+    }
+}
+
 #[derive(Default, Debug)]
 pub enum RecipeRowCommand {
     #[default]
     NoCommand,
-    Action(u32, DynamicIndex),
+    Action(RecipeRowAction, DynamicIndex),
 }
 
 #[derive(Default, Debug)]
@@ -33,7 +50,8 @@ pub enum RecipeRowMessage {
     #[default]
     NoMessage,
     DeleteMe(DynamicIndex),
-    UpdateMe(DynamicIndex),
+    UpdateMyName(DynamicIndex),
+    BuildMode(DynamicIndex),
 }
 
 #[relm4::factory(pub)]
@@ -54,9 +72,9 @@ impl FactoryComponent for RecipeRow {
         
             #[wrap(Some)]
             set_model = &gtk::StringList::new(&[
-                &"",
-                &"editar",
-                &"excluir"
+                &RecipeRowAction::Edit.to_string(),
+                &RecipeRowAction::EditName.to_string(),
+                &RecipeRowAction::Delete.to_string(),
             ]),
 
             // set_selected: CONFIG.game.enhancements.gamescope.window_type.ordinal() as u32,
@@ -74,12 +92,18 @@ impl FactoryComponent for RecipeRow {
             sender: relm4::prelude::FactorySender<Self>,
         ) -> Self::Widgets {
             let index = index.clone();
-            root.connect_selected_item_notify(move |cr|
-                sender.input(RecipeRowCommand::Action(
-                    cr.selected(), 
-                    index.clone()
-                ))
-            );
+            root.connect_selected_item_notify(move |cr| {
+                // dbg!("dafuk");
+                let maybe_action = match cr.selected() {
+                    1 => Some(RecipeRowAction::Edit),
+                    2 => Some(RecipeRowAction::EditName),
+                    3 => Some(RecipeRowAction::Delete),
+                    _ => None
+                };
+                if let Some(action) = maybe_action {
+                    sender.input(RecipeRowCommand::Action(action, index.clone()))
+                }
+            });
             let widgets = view_output!();     
             widgets
     }
@@ -93,15 +117,13 @@ impl FactoryComponent for RecipeRow {
     fn update(&mut self, message: Self::Input, sender: relm4::prelude::FactorySender<Self>) {
         match message {
             RecipeRowCommand::Action(action, index) => {
-                // dbg!(action);
-                // dbg!(index.clone());
                 let message = match action {
-                    2 => RecipeRowMessage::DeleteMe(index),
-                    1 => RecipeRowMessage::UpdateMe(index),
-                    _ => RecipeRowMessage::NoMessage,
+                    RecipeRowAction::Delete => RecipeRowMessage::DeleteMe(index),
+                    RecipeRowAction::EditName => RecipeRowMessage::UpdateMyName(index),
+                    RecipeRowAction::Edit => RecipeRowMessage::BuildMode(index),
                 };
                 sender.output(message)
-                    .expect("failed to output recipe row message while processing Action above");
+                    .expect("failed to output recipe row message while processing selected Action");
             }
             RecipeRowCommand::NoCommand => {}
         }

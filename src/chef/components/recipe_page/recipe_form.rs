@@ -25,6 +25,7 @@ pub enum RecipeFormMessage {
 pub enum RecipeFormCommand {
     #[default]
     NoCommand,
+    // Enable,
     Send,
     Receive(models::Recipe),
     ChangeName(String),
@@ -34,6 +35,7 @@ pub enum RecipeFormAction {
     #[default]
     NoAction,
     Fill,
+    // EditableEntry,
 }
 
 #[relm4::component(pub)]
@@ -77,9 +79,31 @@ impl Component for RecipeFormModel {
 
         ComponentParts { model, widgets }
     }
+    fn update_cmd_with_view(
+            &mut self,
+            widgets: &mut Self::Widgets,
+            message: Self::CommandOutput,
+            _sender: ComponentSender<Self>,
+            _root: &Self::Root,
+        ) {
+        match message {
+            RecipeFormAction::NoAction => {},
+            RecipeFormAction::Fill => {
+                widgets.name_entry.set_text(&self.state.name);
+            }
+            // RecipeFormAction::EditableEntry => {
+                // sender.output(RecipeFormMessage::NoMessage);
+            // }
+        }
+    }
     fn update(&mut self, message: Self::Input, sender: ComponentSender<Self>, _root: &Self::Root) {
         match message {
             RecipeFormCommand::NoCommand => {}
+            // RecipeFormCommand::Enable => {
+                // sender.spawn_command(|sender|
+                    // sender.emit(RecipeFormAction::EditableEntry)
+                // );
+            // }
             RecipeFormCommand::Send => {
                 // todo!("validation");
                 sender.output(RecipeFormMessage::Submit(

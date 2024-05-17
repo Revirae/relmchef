@@ -16,13 +16,13 @@ use crate::chef::models::Recipe;
 use self::recipe_row::RecipeRow;
 
 
-#[derive(Default, Debug)]
-pub struct RecipeListState {}
+// #[derive(Default, Debug)]
+// pub struct RecipeListState {}
 
 #[derive(Debug)]
 pub struct RecipeListModel {
     #[allow(dead_code)]
-    state: RecipeListState,
+    // state: RecipeListState,
     recipelist: FactoryVecDeque<RecipeRow>,
 }
 
@@ -50,7 +50,7 @@ pub enum RecipeListMessage {
 
 #[relm4::component(pub)]
 impl SimpleComponent for RecipeListModel {
-    type Init = RecipeListState;
+    type Init = ();
     type Input = RecipeListCommand;
     type Output = RecipeListMessage;
     view! {
@@ -67,7 +67,7 @@ impl SimpleComponent for RecipeListModel {
         }
     }
     fn init(
-            init: Self::Init,
+            _init: Self::Init,
             root: Self::Root,
             sender: ComponentSender<Self>,
         ) -> ComponentParts<Self> {
@@ -77,14 +77,12 @@ impl SimpleComponent for RecipeListModel {
                 RecipeRowMessage::NoMessage =>
                     RecipeListCommand::NoCommand,
                 RecipeRowMessage::DeleteMe(index) =>
-                    RecipeListCommand::DeleteEntry(index), //DeleteEntry
+                    RecipeListCommand::DeleteEntry(index),
                 RecipeRowMessage::UpdateMyName(index) =>
                     RecipeListCommand::UpdateEntry(index),
-                // RecipeRowMessage::BuildMode(index) =>
-                    // RecipeListCommand::BuildEntry(index),
             });
         let model = RecipeListModel {
-            state: init,
+            // state: init,
             recipelist
         };
         let recipe_listbox = model.recipelist.widget();

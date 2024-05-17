@@ -7,46 +7,48 @@ use crate::chef::models::{Food, FoodPortion, Portion, Product, Recipe};
 
 #[derive(Debug, Default, Serialize, Deserialize)]
 pub struct Cuisine {
-    foodlist: HashMap<Uuid, Food>,
-    recipelist: HashMap<Uuid, Recipe>,
-    portionlist: HashMap<Uuid, Portion>,
-    productlist: HashMap<Uuid, Product>,
+    foodmap: HashMap<Uuid, Food>,
+    recipemap: HashMap<Uuid, Recipe>,
+    portionmap: HashMap<Uuid, Portion>,
+    productmap: HashMap<Uuid, Product>,
 }
 
 impl Cuisine {
     pub fn food_list(&self) -> Vec<Food> {
-        self.foodlist.clone().into_values().collect()
+        self.foodmap.clone().into_values().collect()
     }
     pub fn insert_food(&mut self, id: Uuid, food: Food) {
-        self.foodlist.insert(id, food);
+        self.foodmap.insert(id, food);
     }
     pub fn remove_food(&mut self, id: &Uuid) {
-        self.foodlist.remove(id);
+        self.foodmap.remove(id);
     }
 
-
+    // pub fn recipe_map(&self) -> &HashMap<Uuid, Recipe> {
+        // &self.recipemap
+    // }
     pub fn recipe_list(&self) -> Vec<Recipe> {
-        self.recipelist.clone().into_values().collect()
+        self.recipemap.clone().into_values().collect()
     }
     pub fn insert_recipe(&mut self, id: Uuid, recipe: Recipe) {
-        self.recipelist.insert(id, recipe);
+        self.recipemap.insert(id, recipe);
     }
     pub fn remove_recipe(&mut self, id: &Uuid) {
-        self.recipelist.remove(id);
+        self.recipemap.remove(id);
     }
 
     pub fn portion_list(&self) -> Vec<Portion> {
-        self.portionlist.clone().into_values().collect()
+        self.portionmap.clone().into_values().collect()
     }
     pub fn food_portion_list(&self) -> Vec<FoodPortion> {
         self.portion_list().into_iter().map(|portion| {
             dbg!(portion.clone());
-            dbg!(self.recipelist.clone());
-            let ingredient = self.foodlist
+            dbg!(self.recipemap.clone());
+            let ingredient = self.foodmap
                 .get(&portion.ingredient_id)
                 .expect("failed to get ingredient for food portion list")
                 .clone();
-            let recipe = self.recipelist
+            let recipe = self.recipemap
                 .get(&portion.recipe_id)
                 .expect("failed to get recipe for food portion list")
                 .clone();
@@ -57,23 +59,23 @@ impl Cuisine {
         }).collect()
     }
     pub fn insert_portion(&mut self, id: Uuid, portion: Portion) {
-        self.portionlist.insert(id, portion);
+        self.portionmap.insert(id, portion);
     }
     #[allow(dead_code)]
     pub fn remove_portion(&mut self, id: &Uuid) {
-        self.portionlist.remove(id);
+        self.portionmap.remove(id);
     }
 
     #[allow(dead_code)]
     pub fn product_list(&self) -> Vec<Product> {
-        self.productlist.clone().into_values().collect()
+        self.productmap.clone().into_values().collect()
     }
     pub fn insert_product(&mut self, id: Uuid, product: Product) {
-        self.productlist.insert(id, product);
+        self.productmap.insert(id, product);
     }
     #[allow(dead_code)]
     pub fn remove_product(&mut self, id: &Uuid) {
-        self.productlist.remove(id);
+        self.productmap.remove(id);
     }
 }
 

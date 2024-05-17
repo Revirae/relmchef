@@ -1,14 +1,17 @@
-use libadwaita::ComboRow;
-use relm4::factory::DynamicIndex;
+use gtk::prelude::WidgetExt;
+
 use relm4::gtk;
 use relm4::prelude::FactoryComponent;
-use gtk::prelude::WidgetExt;
+use relm4::prelude::RelmWidgetExt;
+use relm4::adw::prelude::ActionRowExt;
+use relm4::factory::DynamicIndex;
+
+use libadwaita::ComboRow;
 use libadwaita::prelude::{
     PreferencesRowExt,
     ComboRowExt,
     ListBoxRowExt,
 };
-use relm4::adw::prelude::ActionRowExt;
 
 use crate::chef::models;
 
@@ -17,8 +20,10 @@ use crate::chef::models;
 pub struct FoodRow {
     title: String,
     subtitle: String,
-    #[allow(dead_code)]
-    index: DynamicIndex,
+    info_cost: String,
+    info_qtd: String,
+    // #[allow(dead_code)]
+    // index: DynamicIndex,
 }
 
 #[derive(Default, Debug)]
@@ -46,8 +51,21 @@ impl FactoryComponent for FoodRow {
 
     view! {
         ComboRow {
+            set_selectable: false,
             set_activatable: false,
-            set_hexpand: true,
+            add_suffix = &gtk::Box {
+                set_hexpand: true,
+                gtk::Label {
+                    set_margin_horizontal: 25,
+                    set_text: &self.info_cost,
+                },
+                gtk::Label {
+                    set_margin_horizontal: 25,
+                    set_text: &self.info_qtd,
+                }
+            },
+            set_activatable: false,
+            // set_hexpand: true,
             set_title: &self.title,
             set_subtitle: &self.subtitle,
         
@@ -57,11 +75,6 @@ impl FactoryComponent for FoodRow {
                 &"editar",
                 &"excluir"
             ]),
-
-            // set_selected: CONFIG.game.enhancements.gamescope.window_type.ordinal() as u32,
-            // connect_selected_notify[sender] => move |crow| unsafe {
-                // sender.input(FoodRowCommand::Action(crow.index(), self.index));
-            // }
         }
     }
 
@@ -72,8 +85,6 @@ impl FactoryComponent for FoodRow {
             _returned_widget: &<Self::ParentWidget as relm4::factory::FactoryView>::ReturnedWidget,
             sender: relm4::prelude::FactorySender<Self>,
         ) -> Self::Widgets {
-            // root.set_model()
-            // sender.position()
             let index = index.clone();
             root.connect_selected_item_notify(move |cr|
                 sender.input(FoodRowCommand::Action(
@@ -84,18 +95,18 @@ impl FactoryComponent for FoodRow {
             let widgets = view_output!();     
             widgets
     }
-    fn init_model(food: Self::Init, index: &Self::Index, _sender: relm4::prelude::FactorySender<Self>) -> Self {
+    fn init_model(food: Self::Init, _index: &Self::Index, _sender: relm4::prelude::FactorySender<Self>) -> Self {
         Self {
-            index: index.clone().into(),
+            // index: index.clone().into(),
             title: food.name,
             subtitle: food.brand,
+            info_cost: "R$ ".to_owned() + &food.cost.to_string(),
+            info_qtd: food.weight.to_string() + " g",
         }
     }
     fn update(&mut self, message: Self::Input, sender: relm4::prelude::FactorySender<Self>) {
         match message {
             FoodRowCommand::Action(action, index) => {
-                dbg!(action);
-                dbg!(index.clone());
                 let message = match action {
                     2 => FoodRowMessage::DeleteMe(index),
                     1 => FoodRowMessage::UpdateMe(index),

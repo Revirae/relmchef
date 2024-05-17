@@ -3,6 +3,7 @@ mod recipe_form;
 mod recipe_list;
 mod food_portion_form;
 mod food_portion_list;
+mod recipe_info;
 
 use relm4::gtk;
 use relm4::prelude::ComponentSender;
@@ -26,7 +27,7 @@ use components::recipe_page::food_portion_list::{
     FoodPortionListState
 };
 use components::recipe_page::recipe_form::RecipeFormMessage;
-use components::recipe_page::recipe_list::{RecipeListMessage, RecipeListState};
+use components::recipe_page::recipe_list::RecipeListMessage;
 
 use models::Recipe;
 
@@ -34,6 +35,7 @@ use self::food_portion_form::{FoodPortionFormCommand, FoodPortionFormModel};
 use self::recipe_form::{RecipeFormCommand, RecipeFormModel};
 
 use self::food_portion_list::FoodPortionListCommand;
+use self::recipe_info::{RecipeInfoCommand, RecipeInfoModel};
 use self::recipe_list::{RecipeListCommand, RecipeListModel};
 
 
@@ -58,6 +60,7 @@ pub struct RecipePageModel {
     state: RecipePageState,
     recipe_form: Controller<RecipeFormModel>,
     recipe_list: Controller<RecipeListModel>,
+    recipe_info: Controller<RecipeInfoModel>,
     food_portion_form: Controller<FoodPortionFormModel>,
     food_portion_list: Controller<FoodPortionListModel>,
 }
@@ -117,6 +120,7 @@ impl SimpleComponent for RecipePageModel  {
                     set_orientation: gtk::Orientation::Vertical,
                     model.food_portion_form.widget(),
                     model.food_portion_list.widget(),
+                    model.recipe_info.widget(),
                 }
             }
         }
@@ -148,7 +152,7 @@ impl SimpleComponent for RecipePageModel  {
             });
         
         let recipe_list = RecipeListModel::builder()
-            .launch(RecipeListState::default())
+            .launch(())
             .forward(sender.input_sender(), |msg| match msg {
                 RecipeListMessage::NoMessage => {
                     RecipePageCommand::NoCommand
@@ -163,6 +167,7 @@ impl SimpleComponent for RecipePageModel  {
                     RecipePageCommand::BuildRecipe(index)
                 }
             });
+
         let food_portion_list = FoodPortionListModel::builder()
             .launch(FoodPortionListState::default())
             .forward(sender.input_sender(), |msg| match msg {
@@ -176,10 +181,17 @@ impl SimpleComponent for RecipePageModel  {
                     RecipePageCommand::UpdatePortion(index)
                 }
             });
+
+        let recipe_info = RecipeInfoModel::builder()
+            .launch(())
+            .forward(sender.input_sender(), |msg| match msg {
+                
+            });
         
         let model = RecipePageModel  {
             state: init,
             recipe_form,
+            recipe_info,
             food_portion_form,
             recipe_list,
             food_portion_list
@@ -210,11 +222,18 @@ impl SimpleComponent for RecipePageModel  {
                         .filter(|portion| portion.inner.recipe_id == recipe_id)
                         .collect();
                 self.food_portion_list.emit(FoodPortionListCommand::Clear);
-                for portion in foodportionlist {
+                for portion in foodportionlist.clone().into_iter() {
                     self.food_portion_list.emit(
                         FoodPortionListCommand::AddEntry(portion)
                     );
                 }
+                let recipe = self.state.recipelist
+                    .iter()
+                    .find(|recipe| recipe.id == recipe_id)
+                    .unwrap();
+                self.recipe_info.emit(
+                    RecipeInfoCommand::Receive(recipe.clone(), foodportionlist)
+                );
             }    
             RecipePageCommand::LoadFoodIngredientList(foodlist) => {
                 self.food_portion_form.emit(
@@ -269,7 +288,9 @@ impl SimpleComponent for RecipePageModel  {
             }
             RecipePageCommand::BuildRecipe(index) => {
                 let recipe = self.state.recipelist.get(index).unwrap();
-                self.food_portion_form.emit(FoodPortionFormCommand::HookToRecipe(recipe.id));
+                self.food_portion_form.emit(
+                    FoodPortionFormCommand::HookToRecipe(recipe.clone())
+                );
                 sender.input(RecipePageCommand::LoadFoodPortionList(recipe.id));
             }
             RecipePageCommand::PutPortion(portion) => {

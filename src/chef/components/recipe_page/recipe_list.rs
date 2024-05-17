@@ -7,6 +7,7 @@ use gtk::prelude::{
     WidgetExt, OrientableExt,
 };
 
+use relm4::RelmListBoxExt;
 use relm4::{ComponentParts, SimpleComponent};
 
 use crate::chef::components::recipe_page::recipe_list::recipe_row::RecipeRowMessage;
@@ -34,7 +35,7 @@ pub enum RecipeListCommand {
     InsertEntry(usize, Recipe),
     DeleteEntry(DynamicIndex),
     UpdateEntry(DynamicIndex),
-    BuildEntry(DynamicIndex),
+    BuildEntry(usize),
 }
 
 #[derive(Default, Debug)]
@@ -61,16 +62,7 @@ impl SimpleComponent for RecipeListModel {
                 set_min_content_height: 360,
 
                 #[local_ref]
-                recipe_listbox -> gtk::ListBox {
-                    connect_row_activated => |_, _| {}
-                    // set_selection_mode: gtk::SelectionMode::None,
-                    // set_activate_on_single_click: false,
-                    // set_css_classes: &[&"boxed-list"],
-                    // set_sensitive: false,
-                    // set_receives_default: false,
-                    // set_activatable: false,
-                    // set_selectable: false,
-                }
+                recipe_listbox -> gtk::ListBox {}
             }
         }
     }
@@ -88,15 +80,22 @@ impl SimpleComponent for RecipeListModel {
                     RecipeListCommand::DeleteEntry(index), //DeleteEntry
                 RecipeRowMessage::UpdateMyName(index) =>
                     RecipeListCommand::UpdateEntry(index),
-                RecipeRowMessage::BuildMode(index) =>
-                    RecipeListCommand::BuildEntry(index),
+                // RecipeRowMessage::BuildMode(index) =>
+                    // RecipeListCommand::BuildEntry(index),
             });
         let model = RecipeListModel {
             state: init,
             recipelist
         };
         let recipe_listbox = model.recipelist.widget();
-        
+        recipe_listbox.connect_row_selected(move |list, maybe_row| {
+            if let Some(row) = maybe_row {
+                if let Some(index) = list.index_of_child(row) {
+                    dbg!(index);
+                    sender.input(RecipeListCommand::BuildEntry(index as usize))
+                }
+            }
+        });
         // recipe_listbox.set_selection_mode(gtk::SelectionMode::None);
         let widgets = view_output!();
 
@@ -125,8 +124,8 @@ impl SimpleComponent for RecipeListModel {
                     .expect("failed to request recipe update")
             }
             RecipeListCommand::BuildEntry(index) => {
-                let i = index.current_index();
-                sender.output(RecipeListMessage::RequestBuilding(i))
+                // let i = index.current_index();
+                sender.output(RecipeListMessage::RequestBuilding(index))
                     .expect("failed to request recipe build mode")
             }
         }

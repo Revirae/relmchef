@@ -14,7 +14,6 @@ use crate::chef::models;
 pub struct RecipeFormModel {
     state: models::Recipe,
 }
-
 #[derive(Default, Debug)]
 pub enum RecipeFormMessage {
     #[default]
@@ -25,7 +24,6 @@ pub enum RecipeFormMessage {
 pub enum RecipeFormCommand {
     #[default]
     NoCommand,
-    // Enable,
     Send,
     Receive(models::Recipe),
     ChangeName(String),

@@ -23,7 +23,7 @@ pub struct RecipeRow {
 
 #[derive(Debug)]
 pub enum RecipeRowAction {
-    Edit,
+    // Edit,
     EditName,
     Delete,
 }
@@ -31,7 +31,7 @@ pub enum RecipeRowAction {
 impl RecipeRowAction {
     pub fn to_string(&self) -> String {
         match self {
-            Self::Edit => { "editar".into() }
+            // Self::Edit => { "editar".into() }
             Self::EditName => { "mudar nome".into() }
             Self::Delete => { "remover".into() }
         }
@@ -51,7 +51,7 @@ pub enum RecipeRowMessage {
     NoMessage,
     DeleteMe(DynamicIndex),
     UpdateMyName(DynamicIndex),
-    BuildMode(DynamicIndex),
+    // BuildMode(DynamicIndex),
 }
 
 #[relm4::factory(pub)]
@@ -72,7 +72,7 @@ impl FactoryComponent for RecipeRow {
         
             #[wrap(Some)]
             set_model = &gtk::StringList::new(&[
-                &RecipeRowAction::Edit.to_string(),
+                // &RecipeRowAction::Edit.to_string(),
                 &RecipeRowAction::EditName.to_string(),
                 &RecipeRowAction::Delete.to_string(),
             ]),
@@ -92,12 +92,13 @@ impl FactoryComponent for RecipeRow {
             sender: relm4::prelude::FactorySender<Self>,
         ) -> Self::Widgets {
             let index = index.clone();
+            // root.connect_selected_notify(|_|{});
             root.connect_selected_item_notify(move |cr| {
                 // dbg!("dafuk");
                 let maybe_action = match cr.selected() {
-                    1 => Some(RecipeRowAction::Edit),
-                    2 => Some(RecipeRowAction::EditName),
-                    3 => Some(RecipeRowAction::Delete),
+                    // 1 => Some(RecipeRowAction::Edit),
+                    1 => Some(RecipeRowAction::EditName),
+                    2 => Some(RecipeRowAction::Delete),
                     _ => None
                 };
                 if let Some(action) = maybe_action {
@@ -120,7 +121,7 @@ impl FactoryComponent for RecipeRow {
                 let message = match action {
                     RecipeRowAction::Delete => RecipeRowMessage::DeleteMe(index),
                     RecipeRowAction::EditName => RecipeRowMessage::UpdateMyName(index),
-                    RecipeRowAction::Edit => RecipeRowMessage::BuildMode(index),
+                    // RecipeRowAction::Edit => RecipeRowMessage::BuildMode(index),
                 };
                 sender.output(message)
                     .expect("failed to output recipe row message while processing selected Action");

@@ -93,7 +93,7 @@ impl SimpleComponent for FoodPortionListModel {
             portionlist
         };
         let portion_listbox = model.portionlist.widget();
-        
+        // portion_listbox.connect_row_selected(|_,_|{});       
         // portion_listbox.set_selection_mode(gtk::SelectionMode::None);
         let widgets = view_output!();
 
